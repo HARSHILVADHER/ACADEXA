@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Student</title>
+  <style>
+    /* styles.css */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f9;
+}
+
+.container {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 20px;
+  background: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+h1, h2 {
+  text-align: center;
+  color: #333;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+label {
+  font-weight: bold;
+}
+
+input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+button {
+  padding: 10px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #218838;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+thead {
+  background-color: #007bff;
+  color: white;
+}
+
+th, td {
+  padding: 10px;
+  text-align: left;
+  border: 1px solid #ddd;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.action-btn {
+  padding: 5px 10px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.action-btn:hover {
+  background-color: #c82333;
+}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Add Student</h1>
+    <form id="studentForm">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required>
+
+      <label for="age">Age:</label>
+      <input type="number" id="age" name="age" required>
+
+      <label for="grade">Grade:</label>
+      <input type="text" id="grade" name="grade" required>
+
+      <button type="submit">Add Student</button>
+    </form>
+
+    <h2>Student List</h2>
+    <table id="studentTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Age</th>
+          <th>Grade</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Student rows will be dynamically added here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const classCode = urlParams.get('classCode');
+    const studentForm = document.getElementById('studentForm');
+    const studentTableBody = document.querySelector('#studentTable tbody');
+  
+    document.querySelector('h1').innerText += classCode ? ` - ${classCode}` : '';
+  
+    function getStudents() {
+      const studentsByClass = JSON.parse(localStorage.getItem('students')) || {};
+      return studentsByClass[classCode] || [];
+    }
+  
+    function saveStudents(students) {
+      const studentsByClass = JSON.parse(localStorage.getItem('students')) || {};
+      studentsByClass[classCode] = students;
+      localStorage.setItem('students', JSON.stringify(studentsByClass));
+    }
+  
+    function renderStudents() {
+      studentTableBody.innerHTML = '';
+      const students = getStudents();
+      students.forEach((s, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${s.name}</td>
+          <td>${s.age}</td>
+          <td>${s.grade}</td>
+          <td><button class="action-btn" onclick="deleteStudent(${index})">Delete</button></td>
+        `;
+        studentTableBody.appendChild(row);
+      });
+    }
+  
+    function deleteStudent(index) {
+      const students = getStudents();
+      students.splice(index, 1);
+      saveStudents(students);
+      renderStudents();
+    }
+  
+    studentForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const age = document.getElementById('age').value;
+      const grade = document.getElementById('grade').value;
+  
+      const students = getStudents();
+      students.push({ name, age, grade });
+      saveStudents(students);
+      renderStudents();
+  
+      studentForm.reset();
+    });
+  
+    renderStudents();
+  </script>
+  
+</body>
+</html>

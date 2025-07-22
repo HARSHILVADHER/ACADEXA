@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Acadexa - Create Quiz</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --background: #f9fafb;
+      --card: #ffffff;
+      --text-dark: #1f2937;
+      --text-light: #6b7280;
+      --border: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--background);
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    header {
+      background-color: var(--primary);
+      padding: 1rem;
+      text-align: center;
+      color: #fff;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 2rem auto;
+      background-color: var(--card);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+    }
+
+    input[type="text"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    .question-block {
+      background-color: #f3f4f6;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-top: 1.5rem;
+      position: relative;
+    }
+
+    .remove-btn {
+      background: none;
+      color: #ef4444;
+      border: none;
+      font-size: 0.9rem;
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      cursor: pointer;
+    }
+
+    .option-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn {
+      margin-top: 1.5rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s ease-in-out;
+    }
+
+    .add-btn {
+      background-color: #3b82f6;
+      color: white;
+      margin-right: 1rem;
+    }
+
+    .submit-btn {
+      background-color: #10b981;
+      color: white;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    @media (max-width: 600px) {
+      .option-group {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>Acadexa Admin - Create Quiz</header>
+
+  <div class="container">
+    <h2>Create Quiz</h2>
+    <form id="quizForm">
+      <label for="quizTitle">Quiz Title</label>
+      <input type="text" id="quizTitle" required />
+
+      <label for="quizDesc">Description</label>
+      <textarea id="quizDesc" rows="3" required></textarea>
+
+      <label for="classSelect">Assign to Class</label>
+      <select id="classSelect" required>
+        <option value="">Select a Class</option>
+        <option value="ICT-A">ICT-A</option>
+        <option value="ICT-B">ICT-B</option>
+        <option value="ICT-C">ICT-C</option>
+      </select>
+
+      <div id="questionsContainer"></div>
+
+      <div class="actions">
+        <button type="button" class="btn add-btn" onclick="addQuestion()">+ Add Question</button>
+        <button type="submit" class="btn submit-btn">Submit Quiz</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    let questionCount = 0;
+
+    function addQuestion() {
+      questionCount++;
+      const container = document.getElementById('questionsContainer');
+
+      const block = document.createElement('div');
+      block.className = 'question-block';
+      block.innerHTML = `
+        <button type="button" class="remove-btn" onclick="removeQuestion(this)">Remove</button>
+        <label>Question ${questionCount}</label>
+        <input type="text" name="question" placeholder="Enter question" required />
+
+        <label>Options</label>
+        <div class="option-group">
+          <input type="text" name="option1" placeholder="Option A" required />
+          <input type="text" name="option2" placeholder="Option B" required />
+          <input type="text" name="option3" placeholder="Option C" required />
+          <input type="text" name="option4" placeholder="Option D" required />
+        </div>
+
+        <label>Correct Answer</label>
+        <select name="answer" required>
+          <option value="">Select Answer</option>
+          <option value="A">Option A</option>
+          <option value="B">Option B</option>
+          <option value="C">Option C</option>
+          <option value="D">Option D</option>
+        </select>
+      `;
+      container.appendChild(block);
+    }
+
+    function removeQuestion(btn) {
+      btn.parentElement.remove();
+    }
+
+    document.getElementById('quizForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const title = document.getElementById('quizTitle').value.trim();
+      const desc = document.getElementById('quizDesc').value.trim();
+      const classCode = document.getElementById('classSelect').value;
+
+      const questions = [];
+      const blocks = document.querySelectorAll('.question-block');
+
+      blocks.forEach(block => {
+        const question = block.querySelector('input[name="question"]').value.trim();
+        const option1 = block.querySelector('input[name="option1"]').value.trim();
+        const option2 = block.querySelector('input[name="option2"]').value.trim();
+        const option3 = block.querySelector('input[name="option3"]').value.trim();
+        const option4 = block.querySelector('input[name="option4"]').value.trim();
+        const answer = block.querySelector('select[name="answer"]').value;
+
+        questions.push({
+          question,
+          options: [option1, option2, option3, option4],
+          answer
+        });
+      });
+
+      console.log({
+        title,
+        desc,
+        classCode,
+        questions
+      });
+
+      alert('Quiz submitted! (Check console for JSON data)');
+    });
+  </script>
+</body>
+</html>
