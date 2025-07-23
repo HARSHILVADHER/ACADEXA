@@ -24,28 +24,14 @@ if ($result->num_rows === 1) {
     $user = $result->fetch_assoc();
     $db_password = $user['password'];
 
-    // Check if password is hashed
-    $isHashed = password_get_info($db_password)['algo'] !== 0;
-
-    if (
-        ($isHashed && password_verify($password, $db_password)) ||
-        (!$isHashed && $password === $db_password)
-    ) {
-        // Upgrade to hashed password if stored as plain text
-        if (!$isHashed) {
-            $hashed = password_hash($password, PASSWORD_DEFAULT);
-            $update = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
-            $update->bind_param("si", $hashed, $user['id']);
-            $update->execute();
-            $update->close();
-        }
+    // Compare plain text passwords only
+    if ($password === $db_password) {
 
         // ✅ Set session for multi-user support
-        $_SESSION['user_id'] = $user['id']; // renamed from 'id' to 'user_id'
+        $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['email'] = $user['email'];
 
-        // Assuming you have $row as the user record after verifying credentials
         if (isset($user['blocked']) && $user['blocked'] == 1) {
             echo '<div style="color:red;text-align:center;margin-top:20px;">Your account is blocked. Please contact admin.</div>';
             exit;
