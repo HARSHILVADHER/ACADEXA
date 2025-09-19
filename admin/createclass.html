@@ -543,10 +543,13 @@
       <input type="text" id="className" placeholder="e.g., Computer Science 101">
       
       <label>Academic Year</label>
-      <input type="text" id="academicYear" value="2025" readonly>
+      <input type="text" id="academicYear" placeholder="e.g., 2025">
       
       <label>Class Code</label>
       <input type="text" id="classCode" placeholder="e.g., CS101">
+      
+      <label>Mentor Name</label>
+      <input type="text" id="mentorName" placeholder="e.g., John Smith" required>
       
       <div class="modal-buttons">
         <button class="modal-btn secondary" onclick="closeModal()">Cancel</button>
@@ -642,9 +645,10 @@
       const name = document.getElementById('className').value;
       const code = document.getElementById('classCode').value;
       const year = document.getElementById('academicYear').value;
+      const mentorName = document.getElementById('mentorName').value;
 
-      if (!name || !code) {
-        alert("Please fill out class name and code!");
+      if (!name || !code || !year || !mentorName) {
+        alert("Please fill out all required fields!");
         return;
       }
 
@@ -653,7 +657,7 @@
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: `name=${encodeURIComponent(name)}&code=${encodeURIComponent(code)}&year=${encodeURIComponent(year)}`
+        body: `name=${encodeURIComponent(name)}&code=${encodeURIComponent(code)}&year=${encodeURIComponent(year)}&mentor_name=${encodeURIComponent(mentorName)}`
       })
       .then(res => res.text())
       .then(data => {

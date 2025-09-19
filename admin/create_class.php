@@ -13,10 +13,11 @@ if (!$user_id) {
 $name = $_POST['name'];
 $code = $_POST['code'];
 $year = $_POST['year'];
+$mentor_name = $_POST['mentor_name'];
 
-// Insert into classes table with user_id
-$stmt = $conn->prepare("INSERT INTO classes (name, code, year, user_id) VALUES (?, ?, ?, ?)");
-$stmt->bind_param("sssi", $name, $code, $year, $user_id);
+// Insert into classes table with user_id and mentor_name
+$stmt = $conn->prepare("INSERT INTO classes (name, code, year, mentor_name, user_id) VALUES (?, ?, ?, ?, ?)");
+$stmt->bind_param("ssssi", $name, $code, $year, $mentor_name, $user_id);
 
 if ($stmt->execute()) {
     // Sanitize table name (replace spaces and symbols)
