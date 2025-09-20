@@ -9,7 +9,7 @@ if (!$user_id) {
 }
 // Fetch classes for this user
 $classes = [];
-$sql = "SELECT id, name FROM classes WHERE user_id = ?";
+$sql = "SELECT id, name, code FROM classes WHERE user_id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -227,11 +227,11 @@ $stmt->close();
         <h1>Create New Exam</h1>
         <form action="submit_exam.php" method="post">
           <div class="form-group">
-            <label for="class_id">Select Class</label>
-            <select id="class_id" name="class_id" required>
+            <label for="class_code">Select Class</label>
+            <select id="class_code" name="class_code" required>
               <option value="">Select Class</option>
               <?php foreach ($classes as $class): ?>
-                <option value="<?php echo $class['id']; ?>"><?php echo htmlspecialchars($class['name']); ?></option>
+                <option value="<?php echo $class['code']; ?>"><?php echo htmlspecialchars($class['name']); ?></option>
               <?php endforeach; ?>
             </select>
           </div>

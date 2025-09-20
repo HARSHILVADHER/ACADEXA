@@ -7,7 +7,7 @@ if (!$user_id) {
     die("User not authenticated.");
 }
 
-$class_id = $_POST['class_id'] ?? '';
+$class_code = $_POST['class_code'] ?? '';
 $exam_name = $_POST['exam_name'] ?? '';
 $exam_date = $_POST['exam_date'] ?? '';
 $start_time = $_POST['start_time'] ?? '';
@@ -17,19 +17,19 @@ $passing_marks = $_POST['passing_marks'] ?? '';
 $notes = $_POST['notes'] ?? '';
 
 if (
-    !$class_id || !$exam_name || !$exam_date ||
+    !$class_code || !$exam_name || !$exam_date ||
     !$start_time || !$end_time || !$total_marks || !$passing_marks
 ) {
     die("All required fields must be filled.");
 }
 
-$sql = "INSERT INTO exam (user_id, class_id, exam_name, exam_date, start_time, end_time, total_marks, passing_marks, notes) 
+$sql = "INSERT INTO exam (user_id, code, exam_name, exam_date, start_time, end_time, total_marks, passing_marks, notes) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param(
-    "iissssiss",
+    "isssssiis",
     $user_id,
-    $class_id,
+    $class_code,
     $exam_name,
     $exam_date,
     $start_time,
