@@ -18,23 +18,26 @@ try {
     }
     
     // Check if table exists
-    $tableCheck = $conn->query("SHOW TABLES LIKE 'classes'");
+    $tableCheck = $conn->query("SHOW TABLES LIKE 'study_materials'");
     if (!$tableCheck || $tableCheck->num_rows == 0) {
         echo json_encode([]);
         exit;
     }
     
-    $sql = "SELECT code, name FROM classes";
+    $sql = "SELECT sm.*, c.name as class_name 
+            FROM study_materials sm 
+            LEFT JOIN classes c ON sm.code = c.code 
+            ORDER BY sm.created_at DESC";
     $result = $conn->query($sql);
     
-    $classes = [];
+    $materials = [];
     if ($result && $result->num_rows > 0) {
         while($row = $result->fetch_assoc()) {
-            $classes[] = $row;
+            $materials[] = $row;
         }
     }
     
-    echo json_encode($classes);
+    echo json_encode($materials);
 } catch (Exception $e) {
     echo json_encode([]);
 }

@@ -79,7 +79,7 @@ if ($examFilter === 'week') {
 }
 $sql = "SELECT e.exam_name, e.exam_date, e.start_time, e.total_marks, c.name AS class_name
         FROM exam e
-        JOIN classes c ON e.class_id = c.id
+        JOIN classes c ON e.code = c.code
         WHERE $examWhere
         ORDER BY e.exam_date ASC LIMIT 5";
 $stmt = $conn->prepare($sql);
@@ -1000,7 +1000,7 @@ $conn->close();
         <div class="title">Study Material</div>
         <div class="desc">Create student performance reports</div>
         <div class="btn-container">
-          <a href="gradecard.php" class="btn">View Reports</a>
+          <a href="studymaterial.html" class="btn">Upload Materials</a>
         </div>
       </div>
 

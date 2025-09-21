@@ -11,7 +11,7 @@ if (!$user_id) {
 // Fetch all exams for this user
 $exams = [];
 $sql = "SELECT e.*, c.name AS class_name FROM exam e 
-        JOIN classes c ON e.class_id = c.id 
+        JOIN classes c ON e.code = c.code 
         WHERE e.user_id = ? ORDER BY e.exam_date DESC";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
