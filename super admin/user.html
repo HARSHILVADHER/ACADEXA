@@ -286,8 +286,21 @@ async function loadUsers() {
   tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-400 py-5">Loading users...</td></tr>';
 
   try {
+    // First, try to create the users table if it doesn't exist
+    await fetch('php/create_users_table.php');
+    
     const res = await fetch('php/get_users.php');
-    const data = await res.json();
+    if (!res.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('Invalid JSON response:', text);
+      throw new Error('Server returned invalid JSON');
+    }
 
     if (data.success && data.users.length) {
       tbody.innerHTML = data.users.map((u, i) => `
@@ -323,8 +336,10 @@ async function loadUsers() {
 
           let result;
           try {
-            result = await res.json();
+            const text = await res.text();
+            result = JSON.parse(text);
           } catch (e) {
+            console.error('Invalid JSON response:', text);
             result = { success: false, error: 'Invalid JSON or server error.' };
           }
 
@@ -363,7 +378,14 @@ async function loadUsers() {
             body: 'id=' + encodeURIComponent(id)
           });
 
-          const result = await res.json();
+          let result;
+          try {
+            const text = await res.text();
+            result = JSON.parse(text);
+          } catch (e) {
+            console.error('Invalid JSON response:', text);
+            result = { success: false, error: 'Server error' };
+          }
           if (result.success) loadUsers();
           else alert(result.error || `Failed to ${action.toLowerCase()} user.`);
         };
@@ -376,7 +398,14 @@ async function loadUsers() {
           // Fetch user data from backend
           try {
             const res = await fetch('php/get_users.php');
-            const data = await res.json();
+            const text = await res.text();
+            let data;
+            try {
+              data = JSON.parse(text);
+            } catch (e) {
+              console.error('Invalid JSON response:', text);
+              return;
+            }
             if (data.success && data.users.length) {
               const user = data.users.find(u => u.id == id);
               if (!user) {
@@ -391,7 +420,13 @@ async function loadUsers() {
                   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                   body: 'id=' + encodeURIComponent(id)
                 });
-                const passData = await passRes.json();
+                const passText = await passRes.text();
+                let passData;
+                try {
+                  passData = JSON.parse(passText);
+                } catch (e) {
+                  console.error('Invalid JSON response:', passText);
+                }
                 if (passData.success) password = passData.password;
               } catch (e) {}
               // Prepare email preview
@@ -418,7 +453,7 @@ async function loadUsers() {
 
   } catch (e) {
     console.error('Error loading users:', e);
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500 py-5">Failed to load users.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500 py-5">Error loading users. Please check the console for details.</td></tr>';
   }
 }
 loadUsers();
@@ -435,7 +470,15 @@ if (document.getElementById('addUserForm')) {
       method: 'POST',
       body: formData
     });
-    const result = await res.json();
+    let result;
+    let text;
+    try {
+      text = await res.text();
+      result = JSON.parse(text);
+    } catch (e) {
+      console.error('Invalid JSON response:', text);
+      result = { success: false, error: 'Server error' };
+    }
 
     if (result.success) {
       // Optionally show a success message
@@ -503,7 +546,14 @@ if (document.getElementById('sendEmailBtn')) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&username=${encodeURIComponent(username)}&institute_code=${encodeURIComponent(institute_code)}`
       });
-      const result = await res.json();
+      let result;
+      try {
+        const text = await res.text();
+        result = JSON.parse(text);
+      } catch (e) {
+        console.error('Invalid JSON response:', text);
+        result = { success: false, error: 'Server error' };
+      }
       if (result.success) {
         document.getElementById('emailSendStatus').textContent = 'Email sent successfully!';
       } else {

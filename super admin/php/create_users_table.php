@@ -3,8 +3,7 @@ header('Content-Type: application/json');
 require_once '../../admin/config.php';
 
 try {
-    // First try to create the table if it doesn't exist
-    $createSql = "CREATE TABLE IF NOT EXISTS users (
+    $sql = "CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         full_name VARCHAR(255) NOT NULL,
         username VARCHAR(100) NOT NULL UNIQUE,
@@ -15,23 +14,15 @@ try {
         blocked TINYINT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )";
-    $conn->query($createSql);
     
-    // Now fetch users
-    $sql = "SELECT id, full_name, username, email, phone_number, blocked, institute_code FROM users";
-    $result = $conn->query($sql);
-    
-    if ($result) {
-        $users = [];
-        while ($row = $result->fetch_assoc()) {
-            $users[] = $row;
-        }
-        echo json_encode(['success' => true, 'users' => $users]);
+    if ($conn->query($sql) === TRUE) {
+        echo json_encode(['success' => true, 'message' => 'Users table ready']);
     } else {
-        echo json_encode(['success' => false, 'error' => 'Failed to fetch users.']);
+        echo json_encode(['success' => false, 'error' => 'Error creating table: ' . $conn->error]);
     }
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
 }
 
-$conn->close(); 
+$conn->close();
+?>

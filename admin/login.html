@@ -515,7 +515,7 @@ window.onload = () => {
         formData.append("email", email);
         formData.append("password", password);
     
-        const res = await fetch("signup.php", {
+        const res = await fetch("php/signup.php", {
             method: "POST",
             body: formData
         });
@@ -545,7 +545,7 @@ window.onload = () => {
     formData.append("password", password);
     formData.append("institute_code", institute_code);
 
-    const res = await fetch("login.php", {
+    const res = await fetch("php/login.php", {
         method: "POST",
         body: formData
     });
@@ -553,7 +553,7 @@ window.onload = () => {
     const result = await res.text();
     const errorDiv = document.getElementById('login-error');
     if (result.trim() === "success") {
-        window.location.href = "dashboard.php";
+        window.location.href = "php/dashboard.php";
     } else {
         errorDiv.innerHTML = result;
     }

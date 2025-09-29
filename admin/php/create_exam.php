@@ -214,8 +214,8 @@ $stmt->close();
     <div class="logo">Acadexa</div>
     <nav>
       <a href="dashboard.php">Home</a>
-      <a href="createclass.html" class="active">Classes</a>
-      <a href="attendance.html">Attendance</a>
+      <a href="../createclass.html" class="active">Classes</a>
+      <a href="../attendance.html">Attendance</a>
       <a href="gradecard.php">Reports</a>
       <a href="inquiry.php">Inquiries</a>
       <a href="profile.php">Settings</a>

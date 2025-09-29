@@ -21,14 +21,13 @@ echo "<table border='1'>";
 echo "<tr>
         <th>Name</th>
         <th>Age</th>
-        <th>Grade</th>
         <th>Contact</th>
         <th>Email</th>
         <th>Class Code</th>
       </tr>";
 
 // Fetch and print only this user's students
-$stmt = $conn->prepare("SELECT name, age, grade, contact, email, class_code FROM students WHERE user_id = ?");
+$stmt = $conn->prepare("SELECT name, age, contact, email, class_code FROM students WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -36,7 +35,6 @@ while ($row = $result->fetch_assoc()) {
     echo "<tr>
             <td>" . htmlspecialchars($row['name']) . "</td>
             <td>" . htmlspecialchars($row['age']) . "</td>
-            <td>" . htmlspecialchars($row['grade']) . "</td>
             <td>" . htmlspecialchars($row['contact']) . "</td>
             <td>" . htmlspecialchars($row['email']) . "</td>
             <td>" . htmlspecialchars($row['class_code']) . "</td>

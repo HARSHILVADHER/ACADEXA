@@ -523,12 +523,12 @@
   <header>
     <div class="logo">Acadexa</div>
     <nav>
-      <a href="dashboard.php">Home</a>
+      <a href="dashboard.html">Home</a>
       <a href="createclass.html">Classes</a>
       <a href="attendance.html" class="active">Attendance</a>
-      <a href="gradecard.php">Reports</a>
-      <a href="inquiry.php">Inquiries</a>
-      <a href="profile.php">Profile</a>
+      <a href="php/gradecard.php">Reports</a>
+      <a href="php/inquiry.php">Inquiries</a>
+      <a href="php/profile.php">Profile</a>
     </nav>
   </header>
 
@@ -590,77 +590,117 @@ let studentsData = [];
 
 // Load classes from backend
 function loadClasses() {
-  fetch("get_classes.php")
-    .then(res => res.json())
-    .then(classes => {
-      classList.innerHTML = "";
-      
-      if (classes.length === 0) {
+  fetch("php/get_classes.php")
+    .then(res => res.text())
+    .then(text => {
+      try {
+        const classes = JSON.parse(text);
+        classList.innerHTML = "";
+        
+        if (classes.length === 0) {
+          classList.innerHTML = `
+            <div class="empty-classes">
+              <i class="fas fa-chalkboard-teacher"></i>
+              <p>No classes available</p>
+            </div>
+          `;
+          return;
+        }
+        
+        classes.forEach(cls => {
+          const li = document.createElement('li');
+          li.className = 'class-item animate-fade';
+          li.innerHTML = `
+            <i class="fas fa-chalkboard class-icon"></i>
+            <span>${cls.name}</span>
+          `;
+          li.dataset.code = cls.code;
+          li.onclick = function() {
+            document.querySelectorAll('.class-item').forEach(el => el.classList.remove('selected'));
+            li.classList.add('selected');
+            selectedClassCode = cls.code;
+            loadStudents(cls.code);
+            actionBar.style.display = 'flex';
+          };
+          classList.appendChild(li);
+        });
+      } catch (e) {
+        console.error('Error parsing classes:', e);
         classList.innerHTML = `
           <div class="empty-classes">
-            <i class="fas fa-chalkboard-teacher"></i>
-            <p>No classes available</p>
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Error loading classes</p>
           </div>
         `;
-        return;
       }
-      
-      classes.forEach(cls => {
-        const li = document.createElement('li');
-        li.className = 'class-item animate-fade';
-        li.innerHTML = `
-          <i class="fas fa-chalkboard class-icon"></i>
-          <span>${cls.name}</span>
-        `;
-        li.dataset.code = cls.code;
-        li.onclick = function() {
-          document.querySelectorAll('.class-item').forEach(el => el.classList.remove('selected'));
-          li.classList.add('selected');
-          selectedClassCode = cls.code;
-          loadStudents(cls.code);
-          actionBar.style.display = 'flex';
-        };
-        classList.appendChild(li);
-      });
+    })
+    .catch(error => {
+      console.error('Error loading classes:', error);
+      classList.innerHTML = `
+        <div class="empty-classes">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Error loading classes</p>
+        </div>
+      `;
     });
 }
 
 // Load students for selected class
 function loadStudents(classCode) {
-  fetch(`get_students.php?classCode=${encodeURIComponent(classCode)}`)
-    .then(res => res.json())
-    .then(students => {
-      studentsData = students;
-      
-      if (students.length === 0) {
+  fetch(`php/get_students.php?classCode=${encodeURIComponent(classCode)}`)
+    .then(res => res.text())
+    .then(text => {
+      try {
+        const students = JSON.parse(text);
+        studentsData = students;
+        
+        if (students.length === 0) {
+          studentList.innerHTML = `
+            <div class="empty-students">
+              <i class="fas fa-user-graduate"></i>
+              <p>No students in this class</p>
+            </div>
+          `;
+          return;
+        }
+        
+        studentList.innerHTML = "";
+        students.forEach((student, index) => {
+          const card = document.createElement('div');
+          card.className = 'student-card animate-fade';
+          card.innerHTML = `
+            <div class="student-info">
+              <div class="student-name">${index + 1}. ${student.name}</div>
+              <div class="student-details">
+                <span><i class="fas fa-graduation-cap"></i> Age: ${student.age}</span>
+                <span><i class="fas fa-phone"></i> ${student.contact || 'N/A'}</span>
+              </div>
+            </div>
+            <label class="attendance-toggle">
+              <input type="checkbox" name="attendance" value="${student.id}" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          `;
+          studentList.appendChild(card);
+        });
+      } catch (e) {
+        console.error('Error parsing students:', e);
         studentList.innerHTML = `
           <div class="empty-students">
-            <i class="fas fa-user-graduate"></i>
-            <p>No students in this class</p>
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Error loading students</p>
           </div>
         `;
-        return;
       }
-      
-      studentList.innerHTML = "";
-      students.forEach((student, index) => {
-        const card = document.createElement('div');
-        card.className = 'student-card animate-fade';
-        card.innerHTML = `
-          <div class="student-info">
-            <div class="student-name">${index + 1}. ${student.name}</div>
-            <div class="student-details">
-              <span><i class="fas fa-graduation-cap"></i> ${student.grade}</span>
-              <span><i class="fas fa-phone"></i> ${student.contact || 'N/A'}</span>
-            </div>
-          </div>
-          <label class="attendance-toggle">
-            <input type="checkbox" name="attendance" value="${student.id}" checked>
-            <span class="toggle-slider"></span>
-          </label>
-        `;
-        studentList.appendChild(card);
-      });
+    })
+    .catch(error => {
+      console.error('Error loading students:', error);
+      studentList.innerHTML = `
+        <div class="empty-students">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Error loading students</p>
+        </div>
+      `;
     });
 }
 
@@ -694,7 +734,7 @@ checkboxes.forEach(cb => {
 
 
   // Save attendance to database
-  fetch('save_attendance.php', {
+  fetch('php/save_attendance.php', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({

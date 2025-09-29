@@ -3,7 +3,7 @@ include 'config.php';
 
 $classCode = $_GET['classCode'] ?? '';
 
-$sql = "SELECT id, name, grade, contact FROM students WHERE class_code='" . $conn->real_escape_string($classCode) . "'";
+$sql = "SELECT id, name, age, contact FROM students WHERE class_code='" . $conn->real_escape_string($classCode) . "'";
 $result = $conn->query($sql);
 
 $students = [];

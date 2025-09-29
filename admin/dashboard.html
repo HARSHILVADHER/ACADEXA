@@ -1,130 +1,5 @@
-<?php
-include 'config.php';
-session_start();
-
-$user_id = $_SESSION['user_id'] ?? null;
-if (!$user_id) {
-    echo "<p style='text-align:center;color:red;'>User not authenticated!</p>";
-    exit();
-}
-
-// Inquiries count for this user
-$inquiryCount = 0;
-$sql = "SELECT COUNT(*) AS total FROM inquiry WHERE user_id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-if ($result) {
-    $row = $result->fetch_assoc();
-    $inquiryCount = $row['total'];
-}
-$stmt->close();
-
-// Students count for this user
-$studentCount = 0;
-$sqlStudent = "SELECT COUNT(*) AS total FROM students WHERE user_id = ?";
-$stmt = $conn->prepare($sqlStudent);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$resultStudent = $stmt->get_result();
-if ($resultStudent) {
-    $row = $resultStudent->fetch_assoc();
-    $studentCount = $row['total'];
-}
-$stmt->close();
-
-// Classes count for this user
-$Classcount = 0;
-$sqlClass = "SELECT COUNT(*) AS total FROM classes WHERE user_id = ?";
-$stmt = $conn->prepare($sqlClass);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$resultClass = $stmt->get_result();
-if ($resultClass) {
-    $row = $resultClass->fetch_assoc();
-    $Classcount = $row['total'];
-}
-$stmt->close();
-
-// Fetch recent inquiries for this user (with filter)
-$inquiries = [];
-$filter = $_GET['inq_filter'] ?? 'latest';
-$where = "WHERE user_id = ?";
-if ($filter === 'week') {
-    $where .= " AND created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
-} elseif ($filter === 'month') {
-    $where .= " AND created_at >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)";
-}
-$sqlInq = "SELECT student_name, student_mobile, school_name, std, medium, group_name, reference_by, interest_level, followup_date, followup_time, notes, created_at FROM inquiry $where ORDER BY created_at DESC LIMIT 20";
-$stmt = $conn->prepare($sqlInq);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$resultInq = $stmt->get_result();
-if ($resultInq) {
-    while ($row = $resultInq->fetch_assoc()) {
-        $inquiries[] = $row;
-    }
-}
-$stmt->close();
-
-// Fetch upcoming exams for this user (today or future)
-$upcomingExams = [];
-$examFilter = $_GET['exam_filter'] ?? 'latest';
-$examWhere = "e.user_id = ? AND e.exam_date >= CURDATE()";
-if ($examFilter === 'week') {
-    $examWhere .= " AND e.exam_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)";
-} elseif ($examFilter === 'month') {
-    $examWhere .= " AND e.exam_date <= DATE_ADD(CURDATE(), INTERVAL 1 MONTH)";
-}
-$sql = "SELECT e.exam_name, e.exam_date, e.start_time, e.total_marks, c.name AS class_name
-        FROM exam e
-        JOIN classes c ON e.code = c.code
-        WHERE $examWhere
-        ORDER BY e.exam_date ASC LIMIT 5";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-while ($row = $result->fetch_assoc()) {
-    $upcomingExams[] = $row;
-}
-$stmt->close();
-
-// Task role filter logic
-$taskRoleFilter = $_GET['task_role_filter'] ?? '';
-$taskRoleWhere = '';
-$taskRoleParams = [];
-$taskRoleTypes = 'i';
-
-if ($taskRoleFilter && in_array($taskRoleFilter, ['admin', 'trustee', 'tutor'])) {
-    $taskRoleWhere = " AND task_for = ?";
-    $taskRoleParams[] = $taskRoleFilter;
-    $taskRoleTypes .= 's';
-}
-
-// Fetch tasks for this user
-$userTasks = [];
-$sql = "SELECT task_text, task_date, task_for FROM task WHERE user_id = ?$taskRoleWhere ORDER BY task_date DESC LIMIT 10";
-$stmt = $conn->prepare($sql);
-if ($taskRoleWhere) {
-    $stmt->bind_param($taskRoleTypes, $user_id, ...$taskRoleParams);
-} else {
-    $stmt->bind_param("i", $user_id);
-}
-$stmt->execute();
-$result = $stmt->get_result();
-$userTasks = [];
-while ($row = $result->fetch_assoc()) {
-    $userTasks[] = $row;
-}
-$stmt->close();
-
-$conn->close();
-?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -902,12 +777,12 @@ $conn->close();
   <header>
     <div class="logo">Acadexa</div>
     <nav>
-      <a href="dashboard.php" class="active">Home</a>
+      <a href="php/dashboard.php" class="active">Home</a>
       <a href="createclass.html">Classes</a>
       <a href="attendance.html">Attendance</a>
-      <a href="gradecard.php">Reports</a>
-      <a href="inquiry.php">Inquiries</a>
-      <a href="profile.php">Profile</a>
+      <a href="php/gradecard.php">Reports</a>
+      <a href="php/inquiry.php">Inquiries</a>
+      <a href="php/profile.php">Profile</a>
     </nav>
   </header>
 
@@ -918,11 +793,11 @@ $conn->close();
     <!-- Stats Cards -->
     <div class="stats-grid">
       <div class="stat-card animate-fade delay-1 hover-grow">
-        <a href="students.php" style="text-decoration: none; color: inherit;">
+        <a href="students.html" style="text-decoration: none; color: inherit;">
           <div class="icon">
             <i class="fas fa-user-graduate"></i>
           </div>
-          <div class="value"><?php echo $studentCount; ?></div>
+          <div class="value" id="studentCount">0</div>
           <div class="label">Total Students</div>
           <div class="change up">
             <i class="fas fa-arrow-up"></i> 12% from last month
@@ -934,7 +809,7 @@ $conn->close();
         <div class="icon">
           <i class="fas fa-chalkboard-teacher"></i>
         </div>
-        <div class="value"><?php echo $Classcount; ?></div>
+        <div class="value" id="classCount">0</div>
         <div class="label">Active Classes</div>
         <div class="change up">
           <i class="fas fa-arrow-up"></i> 3 new this month
@@ -955,11 +830,11 @@ $conn->close();
       </div>
 
       <div class="stat-card animate-fade delay-4 hover-grow">
-        <a href="total_inquiry.php" style="text-decoration: none; color: inherit;">
+        <a href="php/total_inquiry.php" style="text-decoration: none; color: inherit;">
           <div class="icon">
             <i class="fas fa-question-circle"></i>
           </div>
-          <div class="value"><?php echo $inquiryCount; ?></div>
+          <div class="value" id="inquiryCount">0</div>
           <div class="label">Total Inquiries</div>
           <div class="change up">
             <i class="fas fa-arrow-up"></i> 5 new this week
@@ -978,7 +853,7 @@ $conn->close();
         <div class="title">Create Your Task</div>
         <div class="desc">Create and maintain the daily task</div>
         <div class="btn-container">
-          <a href="calendar.php" class="btn">Go to Tasks</a>
+          <a href="calendar.html" class="btn">Go to Tasks</a>
         </div>
       </div>
 
@@ -989,7 +864,7 @@ $conn->close();
         <div class="title">Exam</div>
         <div class="desc">Create Exam for Students</div>
         <div class="btn-container">
-          <a href="create_exam.php" class="btn">Create Exam</a>
+          <a href="php/create_exam.php" class="btn">Create Exam</a>
         </div>
       </div>
 
@@ -1011,7 +886,7 @@ $conn->close();
         <div class="title">Manage Inquiry</div>
         <div class="desc">Handle student inquiries</div>
         <div class="btn-container">
-          <a href="total_inquiry.php" class="btn">Manage</a>
+          <a href="php/total_inquiry.php" class="btn">Manage</a>
         </div>
       </div>
     </div>
@@ -1023,49 +898,22 @@ $conn->close();
         <div class="task-card animate-fade delay-4 hover-grow">
           <div class="card-header">
             <h3 class="card-title">Your Tasks</h3>
-            <form method="get">
-              <select class="filter-select" name="task_role_filter" onchange="this.form.submit()">
-                <option value="">All Tasks</option>
-                <option value="admin" <?php if($taskRoleFilter==='admin') echo 'selected'; ?>>Admin</option>
-                <option value="trustee" <?php if($taskRoleFilter==='trustee') echo 'selected'; ?>>Trustee</option>
-                <option value="tutor" <?php if($taskRoleFilter==='tutor') echo 'selected'; ?>>Tutor</option>
-              </select>
-              <?php
-                foreach ($_GET as $k => $v) {
-                  if ($k !== 'task_role_filter') {
-                    echo '<input type="hidden" name="'.htmlspecialchars($k).'" value="'.htmlspecialchars($v).'">';
-                  }
-                }
-              ?>
-            </form>
+            <select class="filter-select" id="taskRoleFilter" onchange="loadDashboardData()">
+              <option value="">All Tasks</option>
+              <option value="admin">Admin</option>
+              <option value="trustee">Trustee</option>
+              <option value="tutor">Tutor</option>
+            </select>
           </div>
           
-          <?php if (empty($userTasks)): ?>
+          <ul class="task-list" id="taskList">
             <div class="empty-state">
               <i class="fas fa-check-circle success"></i>
-              <p>No tasks found. Enjoy your free time!</p>
+              <p>Loading tasks...</p>
             </div>
-          <?php else: ?>
-            <ul class="task-list">
-              <?php foreach ($userTasks as $task): ?>
-                <li class="task-item">
-                  <input type="checkbox" class="task-checkbox">
-                  <span class="task-text"><?php echo htmlspecialchars($task['task_text']); ?></span>
-                  <span class="task-date">
-                    <?php
-                      $d = explode('-', $task['task_date']);
-                      echo isset($d[2]) ? "{$d[2]}-{$d[1]}-{$d[0]}" : htmlspecialchars($task['task_date']);
-                    ?>
-                  </span>
-                  <span class="task-role <?php echo htmlspecialchars($task['task_for']); ?>">
-                    <?php echo htmlspecialchars($task['task_for']); ?>
-                  </span>
-                </li>
-              <?php endforeach; ?>
-            </ul>
-          <?php endif; ?>
+          </ul>
           
-          <a href="calendar.php" class="view-all-btn hover-underline">
+          <a href="calendar.html" class="view-all-btn hover-underline">
             View All Tasks <i class="fas fa-arrow-right"></i>
           </a>
         </div>
@@ -1076,53 +924,21 @@ $conn->close();
         <div class="exam-card animate-fade delay-5 hover-grow">
           <div class="card-header">
             <h3 class="card-title">Upcoming Exams</h3>
-            <form method="get">
-              <select class="filter-select" name="exam_filter" onchange="this.form.submit()">
-                <option value="latest" <?php if($examFilter==='latest') echo 'selected'; ?>>Latest</option>
-                <option value="week" <?php if($examFilter==='week') echo 'selected'; ?>>This Week</option>
-                <option value="month" <?php if($examFilter==='month') echo 'selected'; ?>>This Month</option>
-              </select>
-              <?php
-                foreach ($_GET as $k => $v) {
-                  if ($k !== 'exam_filter') {
-                    echo '<input type="hidden" name="'.htmlspecialchars($k).'" value="'.htmlspecialchars($v).'">';
-                  }
-                }
-              ?>
-            </form>
+            <select class="filter-select" id="examFilter" onchange="loadDashboardData()">
+              <option value="latest">Latest</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
           </div>
           
-          <?php if (empty($upcomingExams)): ?>
+          <ul class="exam-list" id="examList">
             <div class="empty-state">
               <i class="fas fa-calendar-times warning"></i>
-              <p>No upcoming exams scheduled</p>
+              <p>Loading exams...</p>
             </div>
-          <?php else: ?>
-            <ul class="exam-list">
-              <?php foreach ($upcomingExams as $exam): ?>
-                <li class="exam-item">
-                  <div class="exam-class"><?php echo htmlspecialchars($exam['class_name']); ?></div>
-                  <div class="exam-name"><?php echo htmlspecialchars($exam['exam_name']); ?></div>
-                  <div class="exam-details">
-                    <div class="exam-detail">
-                      <i class="fas fa-calendar-alt"></i>
-                      <?php echo htmlspecialchars($exam['exam_date']); ?>
-                    </div>
-                    <div class="exam-detail">
-                      <i class="fas fa-clock"></i>
-                      <?php echo htmlspecialchars($exam['start_time']); ?>
-                    </div>
-                    <div class="exam-detail">
-                      <i class="fas fa-star"></i>
-                      <?php echo htmlspecialchars($exam['total_marks']); ?> Marks
-                    </div>
-                  </div>
-                </li>
-              <?php endforeach; ?>
-            </ul>
-          <?php endif; ?>
+          </ul>
           
-          <a href="all_exam.php" class="view-all-btn hover-underline">
+          <a href="all_exam.html" class="view-all-btn hover-underline">
             View All Exams <i class="fas fa-arrow-right"></i>
           </a>
         </div>
@@ -1133,86 +949,195 @@ $conn->close();
     <div class="inquiries-card animate-fade delay-5 hover-grow">
       <div class="card-header">
         <h3 class="card-title">Recent Inquiries</h3>
-        <form method="get">
-          <select class="filter-select" name="inq_filter" onchange="this.form.submit()">
-            <option value="latest" <?php if($filter==='latest') echo 'selected'; ?>>Latest</option>
-            <option value="week" <?php if($filter==='week') echo 'selected'; ?>>This Week</option>
-            <option value="month" <?php if($filter==='month') echo 'selected'; ?>>This Month</option>
-          </select>
-        </form>
+        <select class="filter-select" id="inquiryFilter" onchange="loadDashboardData()">
+          <option value="latest">Latest</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+        </select>
       </div>
       
-      <?php if (empty($inquiries)): ?>
-        <div class="empty-state">
-          <i class="fas fa-inbox primary"></i>
-          <p>No recent inquiries found</p>
-        </div>
-      <?php else: ?>
-        <div style="overflow-x: auto; flex-grow: 1;">
-          <table class="inquiry-table">
-            <thead>
-              <tr>
-                <th>Student</th>
-                <th>Contact</th>
-                <th>Class</th>
-                <th>Medium</th>
-                <th>Follow Up</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php foreach ($inquiries as $inq): ?>
-                <?php
-                  $studentName = htmlspecialchars($inq['student_name']);
-                  $phone = htmlspecialchars($inq['student_mobile']);
-                  $medium = htmlspecialchars($inq['medium']);
-                  $class = htmlspecialchars($inq['std']);
-                  $followupDate = $inq['followup_date'] ? date('d M Y', strtotime($inq['followup_date'])) : 'Not set';
-                  $followupTime = $inq['followup_time'] ? date('h:i A', strtotime($inq['followup_time'])) : '';
-                  $interestLevel = $inq['interest_level'] ?? 'medium';
-                  
-                  // Determine status based on interest level
-                  $statusClass = 'status-new';
-                  $statusText = 'New';
-                  if ($interestLevel === 'high') {
-                    $statusClass = 'status-converted';
-                    $statusText = 'Hot Lead';
-                  } elseif ($interestLevel === 'medium') {
-                    $statusClass = 'status-followup';
-                    $statusText = 'Follow Up';
-                  }
-                ?>
-                <tr>
-                  <td class="student-name"><?php echo $studentName; ?></td>
-                  <td><?php echo $phone; ?></td>
-                  <td>Class <?php echo $class; ?></td>
-                  <td><?php echo $medium; ?></td>
-                  <td>
-                    <div class="followup-date">
-                      <i class="fas fa-bell"></i>
-                      <?php echo $followupDate; ?>
-                      <?php if ($followupTime): ?>
-                        <span style="margin-left: 10px;"><?php echo $followupTime; ?></span>
-                      <?php endif; ?>
-                    </div>
-                  </td>
-                  <td><span class="status-badge <?php echo $statusClass; ?>"><?php echo $statusText; ?></span></td>
-                </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
-        </div>
-      <?php endif; ?>
+      <div style="overflow-x: auto; flex-grow: 1;">
+        <table class="inquiry-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Contact</th>
+              <th>Class</th>
+              <th>Medium</th>
+              <th>Follow Up</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="inquiryTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center;">Loading inquiries...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       
-      <a href="total_inquiry.php" class="view-all-btn hover-underline">
+      <a href="php/total_inquiry.php" class="view-all-btn hover-underline">
         View All Inquiries <i class="fas fa-arrow-right"></i>
       </a>
     </div>
   </div>
 
   <script>
-    // Add animation classes on scroll
+    // Load dashboard data
+    function loadDashboardData() {
+      const taskRoleFilter = document.getElementById('taskRoleFilter').value;
+      const examFilter = document.getElementById('examFilter').value;
+      const inquiryFilter = document.getElementById('inquiryFilter').value;
+      
+      const params = new URLSearchParams();
+      if (taskRoleFilter) params.append('task_role_filter', taskRoleFilter);
+      if (examFilter) params.append('exam_filter', examFilter);
+      if (inquiryFilter) params.append('inq_filter', inquiryFilter);
+      
+      fetch(`php/dashboard_data.php?${params.toString()}`)
+        .then(response => response.text())
+        .then(text => {
+          try {
+            const data = JSON.parse(text);
+            if (data.error) {
+              console.error('Dashboard error:', data.error);
+              return;
+            }
+            
+            // Update stats
+            document.getElementById('studentCount').textContent = data.studentCount || 0;
+            document.getElementById('classCount').textContent = data.classCount || 0;
+            document.getElementById('inquiryCount').textContent = data.inquiryCount || 0;
+            
+            // Update tasks
+            const taskList = document.getElementById('taskList');
+            if (!data.userTasks || data.userTasks.length === 0) {
+              taskList.innerHTML = `
+                <div class="empty-state">
+                  <i class="fas fa-check-circle success"></i>
+                  <p>No tasks found. Enjoy your free time!</p>
+                </div>
+              `;
+            } else {
+              taskList.innerHTML = '';
+              data.userTasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = 'task-item';
+                const dateArr = task.task_date.split('-');
+                const formattedDate = dateArr.length === 3 ? `${dateArr[2]}-${dateArr[1]}-${dateArr[0]}` : task.task_date;
+                li.innerHTML = `
+                  <input type="checkbox" class="task-checkbox">
+                  <span class="task-text">${task.task_text}</span>
+                  <span class="task-date">${formattedDate}</span>
+                  <span class="task-role ${task.task_for}">${task.task_for}</span>
+                `;
+                taskList.appendChild(li);
+              });
+            }
+            
+            // Update exams
+            const examList = document.getElementById('examList');
+            if (!data.upcomingExams || data.upcomingExams.length === 0) {
+              examList.innerHTML = `
+                <div class="empty-state">
+                  <i class="fas fa-calendar-times warning"></i>
+                  <p>No upcoming exams scheduled</p>
+                </div>
+              `;
+            } else {
+              examList.innerHTML = '';
+              data.upcomingExams.forEach(exam => {
+                const li = document.createElement('li');
+                li.className = 'exam-item';
+                li.innerHTML = `
+                  <div class="exam-class">${exam.class_name}</div>
+                  <div class="exam-name">${exam.exam_name}</div>
+                  <div class="exam-details">
+                    <div class="exam-detail">
+                      <i class="fas fa-calendar-alt"></i>
+                      ${exam.exam_date}
+                    </div>
+                    <div class="exam-detail">
+                      <i class="fas fa-clock"></i>
+                      ${exam.start_time}
+                    </div>
+                    <div class="exam-detail">
+                      <i class="fas fa-star"></i>
+                      ${exam.total_marks} Marks
+                    </div>
+                  </div>
+                `;
+                examList.appendChild(li);
+              });
+            }
+            
+            // Update inquiries
+            const inquiryTableBody = document.getElementById('inquiryTableBody');
+            if (!data.inquiries || data.inquiries.length === 0) {
+              inquiryTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No recent inquiries found</td></tr>';
+            } else {
+              inquiryTableBody.innerHTML = '';
+              data.inquiries.forEach(inq => {
+                const tr = document.createElement('tr');
+                const followupDate = inq.followup_date ? new Date(inq.followup_date).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : 'Not set';
+                const followupTime = inq.followup_time ? new Date(`1970-01-01T${inq.followup_time}`).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : '';
+                
+                let statusClass = 'status-new';
+                let statusText = 'New';
+                if (inq.interest_level === 'High') {
+                  statusClass = 'status-converted';
+                  statusText = 'Hot Lead';
+                } else if (inq.interest_level === 'Medium') {
+                  statusClass = 'status-followup';
+                  statusText = 'Follow Up';
+                }
+                
+                tr.innerHTML = `
+                  <td class="student-name">${inq.student_name}</td>
+                  <td>${inq.student_mobile}</td>
+                  <td>Class ${inq.std}</td>
+                  <td>${inq.medium}</td>
+                  <td>
+                    <div class="followup-date">
+                      <i class="fas fa-bell"></i>
+                      ${followupDate}
+                      ${followupTime ? `<span style="margin-left: 10px;">${followupTime}</span>` : ''}
+                    </div>
+                  </td>
+                  <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                `;
+                inquiryTableBody.appendChild(tr);
+              });
+            }
+            
+            // Add checkbox functionality for tasks
+            document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+              checkbox.addEventListener('change', function() {
+                const taskItem = this.closest('.task-item');
+                if (this.checked) {
+                  taskItem.style.opacity = '0.6';
+                  taskItem.querySelector('.task-text').style.textDecoration = 'line-through';
+                } else {
+                  taskItem.style.opacity = '1';
+                  taskItem.querySelector('.task-text').style.textDecoration = 'none';
+                }
+              });
+            });
+            
+          } catch (e) {
+            console.error('Error parsing dashboard data:', e);
+          }
+        })
+        .catch(error => {
+          console.error('Error loading dashboard data:', error);
+        });
+    }
+
+    // Load data on page load
     document.addEventListener('DOMContentLoaded', function() {
+      loadDashboardData();
+      
+      // Add animation classes on scroll
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
@@ -1228,20 +1153,6 @@ $conn->close();
         card.style.transform = 'translateY(20px)';
         card.classList.add(`delay-${(index % 5) + 1}`);
         observer.observe(card);
-      });
-    });
-
-    // Simple checkbox functionality for tasks
-    document.querySelectorAll('.task-checkbox').forEach(checkbox => {
-      checkbox.addEventListener('change', function() {
-        const taskItem = this.closest('.task-item');
-        if (this.checked) {
-          taskItem.style.opacity = '0.6';
-          taskItem.querySelector('.task-text').style.textDecoration = 'line-through';
-        } else {
-          taskItem.style.opacity = '1';
-          taskItem.querySelector('.task-text').style.textDecoration = 'none';
-        }
       });
     });
   </script>

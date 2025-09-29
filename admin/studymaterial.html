@@ -367,13 +367,11 @@
     <header>
         <div class="logo">Acadexa</div>
         <nav>
-            <a href="dashboard.php">Home</a>
+            <a href="php/dashboard.php">Home</a>
             <a href="createclass.html">Classes</a>
             <a href="attendance.html">Attendance</a>
-            <a href="gradecard.php">Reports</a>
-            <a href="inquiry.php">Inquiries</a>
-            <a href="studymaterial.html" class="active">Study Material</a>
-            <a href="profile.php">Settings</a>
+            <a href="php/gradecard.php">Reports</a>
+            <a href="php/profile.php">Settings</a>
         </nav>
     </header>
 
@@ -389,7 +387,7 @@
             </div>
             
             
-            <form id="uploadForm" action="studymaterial.php" method="POST" enctype="multipart/form-data">
+            <form id="uploadForm" action="php/studymaterial.php" method="POST" enctype="multipart/form-data">
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="materialTitle">Material Title</label>
@@ -468,7 +466,7 @@
 
         // Load classes for dropdown
         function loadClasses() {
-            fetch('get_classes.php')
+            fetch('php/get_classes.php')
                 .then(response => {
                     if (!response.ok) throw new Error('Network response was not ok');
                     return response.text();
@@ -501,7 +499,7 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
             
-            fetch('upload_material.php', {
+            fetch('php/upload_material.php', {
                 method: 'POST',
                 body: formData
             })
@@ -527,7 +525,7 @@
 
         // Load existing materials
         function loadMaterials() {
-            fetch('get_materials.php')
+            fetch('php/get_materials.php')
                 .then(response => {
                     if (!response.ok) throw new Error('Network response was not ok');
                     return response.text();
@@ -605,14 +603,14 @@
 
         // Download material
         function downloadMaterial(id) {
-            window.open(`download_material.php?id=${id}`, '_blank');
+            window.open(`php/download_material.php?id=${id}`, '_blank');
         }
 
         // Delete material
         function deleteMaterial(id) {
             if (!confirm('Are you sure you want to delete this material?')) return;
             
-            fetch('delete_material.php', {
+            fetch('php/delete_material.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: `id=${id}`

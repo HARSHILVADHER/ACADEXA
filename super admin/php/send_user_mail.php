@@ -47,7 +47,7 @@ try {
     $mail->Host = 'smtp.gmail.com';
     $mail->SMTPAuth = true;
     $mail->Username = 'acadexa.official@gmail.com'; // Your Gmail address
-    $mail->Password = 'khmm crrq upgc cuge'; // Use Gmail App Password, not your Gmail password
+    $mail->Password = 'wwzj rkoh odao lpvs'; // Use Gmail App Password, not your Gmail password
     $mail->SMTPSecure = 'tls';
     $mail->Port = 587;
 

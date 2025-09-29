@@ -448,9 +448,9 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'studentinfo' && isset($_GET['id']
   <header>
     <div class="logo">Acadexa</div>
     <nav>
-      <a href="dashboard.php">Home</a>
-      <a href="createclass.html">Classes</a>
-      <a href="attendance.html">Attendance</a>
+      <a href="../dashboard.html">Home</a>
+      <a href="../createclass.html">Classes</a>
+      <a href="../attendance.html">Attendance</a>
       <a href="gradecard.php" class="active">Reports</a>
       <a href="inquiry.php">Inquiries</a>
       <a href="profile.php">Profile</a>
@@ -463,7 +463,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'studentinfo' && isset($_GET['id']
                 <h2 class="card-title">
                     <i class="fas fa-chart-line"></i> Grade Card Management
                 </h2>
-                <a href="bulkreport.html" class="btn btn-primary">
+                <a href="../bulkreport.html" class="btn btn-primary">
                     <i class="fas fa-file-export"></i> Generate All Reports
                 </a>
             </div>
