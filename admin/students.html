@@ -157,6 +157,19 @@
     .download-btn:hover {
       background-color: #155ab6;
     }
+    .view-btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+    .view-btn:hover {
+      background-color: var(--primary-dark);
+    }
   </style>
 </head>
 <body>
@@ -188,6 +201,7 @@
           <th>Contact</th>
           <th>Email</th>
           <th>Class Code</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
@@ -232,7 +246,7 @@
             tbody.innerHTML = '';
             
             if (students.length === 0) {
-              tbody.innerHTML = '<tr><td colspan="5">No students found</td></tr>';
+              tbody.innerHTML = '<tr><td colspan="6">No students found</td></tr>';
               return;
             }
             
@@ -244,6 +258,7 @@
                 <td>${student.contact}</td>
                 <td>${student.email}</td>
                 <td>${student.class_code}</td>
+                <td><button class="view-btn" onclick="viewStudent(${student.id})">View</button></td>
               `;
               tbody.appendChild(row);
             });
@@ -264,13 +279,17 @@
       const rows = document.querySelectorAll("#studentsTable tbody tr");
 
       rows.forEach(row => {
-        if (row.cells.length < 5) return; // Skip error rows
+        if (row.cells.length < 6) return; // Skip error rows
         const name = row.cells[0].textContent.toLowerCase();
         const classCode = row.cells[4].textContent;
         const matchesSearch = name.includes(input);
         const matchesClass = filterClass === "" || classCode === filterClass;
         row.style.display = matchesSearch && matchesClass ? "" : "none";
       });
+    }
+
+    function viewStudent(studentId) {
+      window.location.href = `php/student_profile.php?id=${studentId}`;
     }
 
     // Load data on page load
