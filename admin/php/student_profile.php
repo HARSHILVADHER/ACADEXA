@@ -25,6 +25,13 @@ $stmt->execute();
 $student = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
+// Get fee information for display
+$fee_stmt = $conn->prepare("SELECT decided_fees FROM fees_structure WHERE student_id = ? AND user_id = ?");
+$fee_stmt->bind_param("ii", $student_id, $user_id);
+$fee_stmt->execute();
+$fee_result = $fee_stmt->get_result()->fetch_assoc();
+$fee_stmt->close();
+
 // Check if profile_image column exists, if not add it
 $result = $conn->query("SHOW COLUMNS FROM students LIKE 'profile_image'");
 if ($result->num_rows == 0) {
@@ -543,6 +550,177 @@ $conn->close();
             }
         }
         
+        .btn-view {
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-view:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background-color: var(--white);
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--card-shadow-hover);
+        }
+        
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--primary);
+            color: var(--white);
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .close {
+            color: var(--white);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .close:hover {
+            opacity: 0.7;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid var(--light-gray);
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: var(--gray);
+            transition: var(--transition);
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .installment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        .installment-item:last-child {
+            border-bottom: none;
+        }
+        
+        .installment-edit {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 0;
+        }
+        
+        .installment-edit input {
+            padding: 8px 12px;
+            border: 1px solid var(--light-gray);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .receipt-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        .payment-mode {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .payment-mode label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        
+        .btn-generate {
+            background: var(--success);
+            color: var(--white);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .btn-generate.show {
+            display: block;
+        }
+        
         @media (max-width: 768px) {
             header {
                 padding: 15px 20px;
@@ -570,6 +748,16 @@ $conn->close();
             
             .payment-status {
                 grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+            }
+            
+            .receipt-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
             }
         }
     </style>
@@ -717,30 +905,14 @@ $conn->close();
                 <div class="content-card">
                     <div class="card-header">
                         <h3 class="card-title"><i class="fas fa-credit-card"></i> Fee Information</h3>
-                        <span class="card-badge success">Paid</span>
+                        <button class="btn-view" onclick="openFeeModal(<?= $student_id ?>)">
+                            <i class="fas fa-eye"></i> View
+                        </button>
                     </div>
                     <div class="fee-summary">
                         <div class="fee-row">
-                            <span class="fee-label">Monthly Tuition</span>
-                            <span class="fee-amount">₹5,000</span>
-                        </div>
-                        <div class="fee-row">
-                            <span class="fee-label">Registration Fee</span>
-                            <span class="fee-amount">₹1,000</span>
-                        </div>
-                        <div class="fee-row total">
-                            <span class="fee-label">Total Paid</span>
-                            <span class="fee-amount">₹15,000</span>
-                        </div>
-                    </div>
-                    <div class="payment-status">
-                        <div class="status-item">
-                            <span class="status-label">Last Payment</span>
-                            <span class="status-value">March 15, 2024</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Next Due</span>
-                            <span class="status-value">April 15, 2024</span>
+                            <span class="fee-label">Loading fee information...</span>
+                            <span class="fee-amount">-</span>
                         </div>
                     </div>
                 </div>
@@ -768,6 +940,34 @@ $conn->close();
             </div>
         </div>
     </div>
+    <!-- Fee Modal -->
+    <div id="feeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Fee Management</h2>
+                <span class="close" onclick="closeFeeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="tab-container">
+                    <button class="tab active" onclick="switchTab('structure')">Fee Structure</button>
+                    <button class="tab" onclick="switchTab('receipt')">Receipt</button>
+                </div>
+                
+                <div id="structure-tab" class="tab-content active">
+                    <div id="fee-structure-content">
+                        <p>Loading fee structure...</p>
+                    </div>
+                </div>
+                
+                <div id="receipt-tab" class="tab-content">
+                    <div id="receipt-content">
+                        <p>Loading receipt information...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
     document.getElementById('imageUpload').addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -809,6 +1009,139 @@ $conn->close();
             alert('Upload failed. Please try again.');
         });
     });
+    
+    function openFeeModal(studentId) {
+        document.getElementById('feeModal').style.display = 'block';
+        loadFeeData(studentId);
+    }
+    
+    function closeFeeModal() {
+        document.getElementById('feeModal').style.display = 'none';
+    }
+    
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        event.target.classList.add('active');
+        document.getElementById(tabName + '-tab').classList.add('active');
+    }
+    
+    function loadFeeData(studentId) {
+        fetch('get_fee_details.php?student_id=' + studentId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayFeeStructure(data.fee_data);
+                displayReceiptSection(data.fee_data);
+            } else {
+                document.getElementById('fee-structure-content').innerHTML = '<p>No fee structure found for this student.</p>';
+                document.getElementById('receipt-content').innerHTML = '<p>No fee data available.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('fee-structure-content').innerHTML = '<p>Error loading fee data.</p>';
+        });
+    }
+    
+    function displayFeeStructure(feeData) {
+        const installments = JSON.parse(feeData.installments || '[]');
+        let html = `
+            <div style="margin-bottom: 20px;">
+                <h4>Decided Fees: ₹${parseFloat(feeData.decided_fees).toFixed(2)}</h4>
+            </div>
+            <div id="installments-edit">
+                <h5>Installments:</h5>
+        `;
+        
+        installments.forEach((installment, index) => {
+            html += `
+                <div class="installment-edit">
+                    <input type="number" value="${installment.amount}" step="0.01" onchange="updateInstallment(${index}, 'amount', this.value)">
+                    <input type="date" value="${installment.due_date}" onchange="updateInstallment(${index}, 'due_date', this.value)">
+                    <button onclick="removeInstallment(${index})" style="background: var(--danger); color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+        });
+        
+        html += `
+            </div>
+            <button onclick="saveUpdatedFees(${feeData.student_id})" style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; margin-top: 15px; cursor: pointer;">
+                Save Changes
+            </button>
+        `;
+        
+        document.getElementById('fee-structure-content').innerHTML = html;
+    }
+    
+    function displayReceiptSection(feeData) {
+        const installments = JSON.parse(feeData.installments || '[]');
+        let html = '<h5>Payment Receipts:</h5>';
+        
+        installments.forEach((installment, index) => {
+            html += `
+                <div class="receipt-row">
+                    <div>₹${installment.amount}</div>
+                    <div>${installment.due_date}</div>
+                    <div class="payment-mode">
+                        <label><input type="radio" name="payment_${index}" value="cash" onchange="showGenerateButton(${index})"> Cash</label>
+                        <label><input type="radio" name="payment_${index}" value="cheque" onchange="showGenerateButton(${index})"> Cheque</label>
+                        <label><input type="radio" name="payment_${index}" value="online" onchange="showGenerateButton(${index})"> Online</label>
+                    </div>
+                    <button class="btn-generate" id="generate_${index}" onclick="generateReceipt(${index}, ${feeData.student_id})">
+                        Generate
+                    </button>
+                </div>
+            `;
+        });
+        
+        document.getElementById('receipt-content').innerHTML = html;
+    }
+    
+    function showGenerateButton(index) {
+        document.getElementById('generate_' + index).classList.add('show');
+    }
+    
+    function generateReceipt(index, studentId) {
+        const paymentMode = document.querySelector(`input[name="payment_${index}"]:checked`)?.value;
+        if (!paymentMode) {
+            alert('Please select a payment mode');
+            return;
+        }
+        
+        // Save payment mode to database
+        fetch('save_payment_mode.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                student_id: studentId,
+                installment_index: index,
+                payment_mode: paymentMode
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Payment mode saved successfully!');
+                // Here you can add further receipt generation logic
+            } else {
+                alert('Error saving payment mode');
+            }
+        });
+    }
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('feeModal');
+        if (event.target == modal) {
+            closeFeeModal();
+        }
+    }
     </script>
 </body>
 </html>
