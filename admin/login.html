@@ -420,7 +420,7 @@ body {
 			<!-- SIGN IN -->
 			<div class="col align-items-center flex-col sign-in">
 				<div class="form-wrapper align-items-center">
-					<div class="form sign-in">
+					<div class="form sign-in" id="login-form">
 						<div class="input-group">
 							<i class='bx bxs-user'></i>
 							<input type="text" name="login_id" placeholder="Email or Username" id="login-id-input">
@@ -448,11 +448,50 @@ body {
 								<input type="password" name="confirm_password" placeholder="Confirm Password" id="confirm-password-input">
 							</div>
 						</div>
+						<button type="button" id="forgot-password-btn" style="background:transparent;color:var(--primary-color);border:1px solid var(--primary-color);margin-bottom:10px;">
+							Forgot Password?
+						</button>
 						<button type="button" id="login-btn">
 							Continue
 						</button>
 						<div id="login-error" style="color:red;text-align:center;margin-top:20px;"></div>
+					</div>
+					
+					<!-- Forgot Password Form -->
+					<div class="form sign-in" id="forgot-password-form" style="display:none;">
+						<div id="email-step">
+							<div class="input-group">
+								<i class='bx bx-mail-send'></i>
+								<input type="email" id="forgot-email" placeholder="Enter your email">
+							</div>
+							<button type="button" id="send-code-btn">Send Code</button>
+						</div>
 						
+						<div id="code-step" style="display:none;">
+							<div class="input-group">
+								<i class='bx bxs-key'></i>
+								<input type="text" id="verification-code" placeholder="Enter 6-digit code" maxlength="6">
+							</div>
+							<button type="button" id="verify-code-btn">Verify Code</button>
+						</div>
+						
+						<div id="password-step" style="display:none;">
+							<div class="input-group">
+								<i class='bx bxs-lock-alt'></i>
+								<input type="password" id="new-password" placeholder="New Password">
+							</div>
+							<div class="input-group">
+								<i class='bx bxs-lock-alt'></i>
+								<input type="password" id="confirm-new-password" placeholder="Confirm Password">
+							</div>
+							<button type="button" id="reset-password-btn">Reset Password</button>
+						</div>
+						
+						<button type="button" id="back-to-login-btn" style="background:transparent;color:var(--primary-color);border:1px solid var(--primary-color);margin-top:10px;">
+							Back to Login
+						</button>
+						<div id="forgot-error" style="color:red;text-align:center;margin-top:20px;"></div>
+						<div id="forgot-success" style="color:green;text-align:center;margin-top:20px;"></div>
 					</div>
 				</div>
 				<div class="form-wrapper">
@@ -634,6 +673,175 @@ document.addEventListener('click', function(e) {
             eyeIcon.classList.add('fa-eye');
         }
     }
+});
+
+// Forgot Password functionality
+let forgotPasswordStep = 1;
+let verificationCode = '';
+let forgotEmail = '';
+
+document.getElementById('forgot-password-btn').addEventListener('click', () => {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('forgot-password-form').style.display = 'block';
+});
+
+document.getElementById('back-to-login-btn').addEventListener('click', () => {
+    document.getElementById('forgot-password-form').style.display = 'none';
+    document.getElementById('login-form').style.display = 'block';
+    resetForgotPassword();
+});
+
+function resetForgotPassword() {
+    forgotPasswordStep = 1;
+    document.getElementById('email-step').style.display = 'block';
+    document.getElementById('code-step').style.display = 'none';
+    document.getElementById('password-step').style.display = 'none';
+    document.getElementById('forgot-error').innerHTML = '';
+    document.getElementById('forgot-success').innerHTML = '';
+    document.getElementById('forgot-email').value = '';
+    document.getElementById('verification-code').value = '';
+    document.getElementById('new-password').value = '';
+    document.getElementById('confirm-new-password').value = '';
+}
+
+document.getElementById('send-code-btn').addEventListener('click', async () => {
+    const email = document.getElementById('forgot-email').value;
+    const errorDiv = document.getElementById('forgot-error');
+    const successDiv = document.getElementById('forgot-success');
+    
+    if (!email) {
+        errorDiv.innerHTML = 'Email is required!';
+        return;
+    }
+    
+    const btn = document.getElementById('send-code-btn');
+    btn.innerHTML = 'Sending...';
+    btn.disabled = true;
+    errorDiv.innerHTML = '';
+    successDiv.innerHTML = '';
+    
+    try {
+        const formData = new FormData();
+        formData.append('email', email);
+        
+        const res = await fetch('php/send_reset_code.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await res.text();
+            throw new Error('Server returned non-JSON response: ' + text);
+        }
+        
+        const result = await res.json();
+        
+        if (result.success) {
+            forgotEmail = email;
+            verificationCode = result.code;
+            document.getElementById('email-step').style.display = 'none';
+            document.getElementById('code-step').style.display = 'block';
+            successDiv.innerHTML = 'Verification code sent to your email!';
+            errorDiv.innerHTML = '';
+        } else {
+            errorDiv.innerHTML = result.error || 'Unknown error occurred';
+        }
+    } catch (error) {
+        console.error('Send code error:', error);
+        errorDiv.innerHTML = 'Network error: ' + error.message + '. Please check your connection and try again.';
+    }
+    
+    btn.innerHTML = 'Send Code';
+    btn.disabled = false;
+});
+
+document.getElementById('verify-code-btn').addEventListener('click', () => {
+    const code = document.getElementById('verification-code').value;
+    const errorDiv = document.getElementById('forgot-error');
+    const successDiv = document.getElementById('forgot-success');
+    
+    if (!code) {
+        errorDiv.innerHTML = 'Verification code is required!';
+        return;
+    }
+    
+    if (code === verificationCode) {
+        document.getElementById('code-step').style.display = 'none';
+        document.getElementById('password-step').style.display = 'block';
+        successDiv.innerHTML = 'Code verified! Enter your new password.';
+        errorDiv.innerHTML = '';
+    } else {
+        errorDiv.innerHTML = 'Invalid verification code!';
+    }
+});
+
+document.getElementById('reset-password-btn').addEventListener('click', async () => {
+    const newPassword = document.getElementById('new-password').value;
+    const confirmPassword = document.getElementById('confirm-new-password').value;
+    const errorDiv = document.getElementById('forgot-error');
+    const successDiv = document.getElementById('forgot-success');
+    
+    if (!newPassword || !confirmPassword) {
+        errorDiv.innerHTML = 'Both password fields are required!';
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        errorDiv.innerHTML = 'Passwords do not match!';
+        return;
+    }
+    
+    const btn = document.getElementById('reset-password-btn');
+    btn.innerHTML = 'Updating...';
+    btn.disabled = true;
+    errorDiv.innerHTML = '';
+    successDiv.innerHTML = '';
+    
+    try {
+        const formData = new FormData();
+        formData.append('email', forgotEmail);
+        formData.append('password', newPassword);
+        
+        const res = await fetch('php/reset_password.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await res.text();
+            throw new Error('Server returned non-JSON response: ' + text);
+        }
+        
+        const result = await res.json();
+        
+        if (result.success) {
+            successDiv.innerHTML = 'Password updated successfully! Redirecting to login...';
+            errorDiv.innerHTML = '';
+            setTimeout(() => {
+                document.getElementById('forgot-password-form').style.display = 'none';
+                document.getElementById('login-form').style.display = 'block';
+                resetForgotPassword();
+            }, 2000);
+        } else {
+            errorDiv.innerHTML = result.error || 'Unknown error occurred';
+        }
+    } catch (error) {
+        console.error('Reset password error:', error);
+        errorDiv.innerHTML = 'Network error: ' + error.message + '. Please check your connection and try again.';
+    }
+    
+    btn.innerHTML = 'Reset Password';
+    btn.disabled = false;
 });
     </script>
     

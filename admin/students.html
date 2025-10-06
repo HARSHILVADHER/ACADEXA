@@ -197,8 +197,12 @@
       <thead>
         <tr>
           <th>Name</th>
-          <th>Age</th>
-          <th>Contact</th>
+          <th>DOB</th>
+          <th>Medium</th>
+          <th>Roll No</th>
+          <th>Std</th>
+          <th>Parent Contact</th>
+          <th>Student Contact</th>
           <th>Email</th>
           <th>Class Code</th>
           <th>Action</th>
@@ -246,7 +250,7 @@
             tbody.innerHTML = '';
             
             if (students.length === 0) {
-              tbody.innerHTML = '<tr><td colspan="6">No students found</td></tr>';
+              tbody.innerHTML = '<tr><td colspan="10">No students found</td></tr>';
               return;
             }
             
@@ -254,8 +258,12 @@
               const row = document.createElement('tr');
               row.innerHTML = `
                 <td>${student.name}</td>
-                <td>${student.age}</td>
-                <td>${student.contact}</td>
+                <td>${student.dob || 'N/A'}</td>
+                <td>${student.medium || 'N/A'}</td>
+                <td>${student.roll_no || 'N/A'}</td>
+                <td>${student.std || 'N/A'}</td>
+                <td>${student.parent_contact || 'N/A'}</td>
+                <td>${student.student_contact || 'N/A'}</td>
                 <td>${student.email}</td>
                 <td>${student.class_code}</td>
                 <td><button class="view-btn" onclick="viewStudent(${student.id})">View</button></td>
@@ -264,12 +272,12 @@
             });
           } catch (e) {
             console.error('Error parsing students:', e);
-            document.querySelector('#studentsTable tbody').innerHTML = '<tr><td colspan="5">Error loading students</td></tr>';
+            document.querySelector('#studentsTable tbody').innerHTML = '<tr><td colspan="10">Error loading students</td></tr>';
           }
         })
         .catch(error => {
           console.error('Error loading students:', error);
-          document.querySelector('#studentsTable tbody').innerHTML = '<tr><td colspan="5">Error loading students</td></tr>';
+          document.querySelector('#studentsTable tbody').innerHTML = '<tr><td colspan="10">Error loading students</td></tr>';
         });
     }
 
@@ -279,9 +287,9 @@
       const rows = document.querySelectorAll("#studentsTable tbody tr");
 
       rows.forEach(row => {
-        if (row.cells.length < 6) return; // Skip error rows
+        if (row.cells.length < 10) return; // Skip error rows
         const name = row.cells[0].textContent.toLowerCase();
-        const classCode = row.cells[4].textContent;
+        const classCode = row.cells[8].textContent;
         const matchesSearch = name.includes(input);
         const matchesClass = filterClass === "" || classCode === filterClass;
         row.style.display = matchesSearch && matchesClass ? "" : "none";

@@ -4,15 +4,20 @@ session_start();
 require_once 'config.php';
 
 $name = $_POST['name'] ?? '';
-$age = $_POST['age'] ?? '';
-$contact = $_POST['contact'] ?? '';
+$dob = $_POST['dob'] ?? '';
+$medium = $_POST['medium'] ?? '';
+$roll_no = $_POST['roll_no'] ?? '';
+$std = $_POST['std'] ?? '';
+$parent_contact = $_POST['parent_contact'] ?? '';
+$student_contact = $_POST['student_contact'] ?? '';
 $email = $_POST['email'] ?? '';
 $classCode = $_POST['classCode'] ?? '';
-$user_id = $_SESSION['user_id'] ?? null; // Get the logged-in user's ID
+$group_name = $_POST['group_name'] ?? null;
+$user_id = $_SESSION['user_id'] ?? null;
 
-if ($name && $age && $contact && $email && $classCode && $user_id) {
-  $stmt = $conn->prepare("INSERT INTO students (name, age, contact, email, class_code, user_id) VALUES (?, ?, ?, ?, ?, ?)");
-  $stmt->bind_param("sisssi", $name, $age, $contact, $email, $classCode, $user_id);
+if ($name && $dob && $medium && $roll_no && $std && $parent_contact && $email && $classCode && $user_id) {
+  $stmt = $conn->prepare("INSERT INTO students (name, dob, medium, roll_no, std, parent_contact, student_contact, email, class_code, group_name, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+  $stmt->bind_param("ssssssssssi", $name, $dob, $medium, $roll_no, $std, $parent_contact, $student_contact, $email, $classCode, $group_name, $user_id);
   if ($stmt->execute()) {
     echo json_encode(["status" => "success"]);
   } else {
@@ -20,7 +25,7 @@ if ($name && $age && $contact && $email && $classCode && $user_id) {
   }
   $stmt->close();
 } else {
-  echo json_encode(["status" => "error", "message" => "Missing fields"]);
+  echo json_encode(["status" => "error", "message" => "Missing required fields"]);
 }
 
 $conn->close();
