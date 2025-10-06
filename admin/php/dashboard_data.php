@@ -37,6 +37,28 @@ try {
     $data['classCount'] = $result->fetch_assoc()['total'];
     $stmt->close();
 
+    // Attendance percentage
+    // Check if user_id column exists in attendance table
+    $result = $conn->query("SHOW COLUMNS FROM attendance LIKE 'user_id'");
+    if ($result->num_rows == 0) {
+        $conn->query("ALTER TABLE attendance ADD COLUMN user_id INT DEFAULT NULL");
+    }
+    
+    $stmt = $conn->prepare("SELECT 
+        COUNT(*) as total_records,
+        SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present_count
+        FROM attendance 
+        WHERE user_id = ? AND date >= DATE_FORMAT(CURDATE(), '%Y-%m-01')");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $attendanceData = $result->fetch_assoc();
+    $data['attendancePercentage'] = 0;
+    if ($attendanceData['total_records'] > 0) {
+        $data['attendancePercentage'] = round(($attendanceData['present_count'] / $attendanceData['total_records']) * 100);
+    }
+    $stmt->close();
+
     // Recent inquiries
     $filter = $_GET['inq_filter'] ?? 'latest';
     $where = "WHERE user_id = ?";

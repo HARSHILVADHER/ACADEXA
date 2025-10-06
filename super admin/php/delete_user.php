@@ -19,7 +19,7 @@ register_shutdown_function(function () {
 
 header('Content-Type: application/json');
 
-require_once '../../admin/config.php'; // Adjust path as needed
+require_once '../../admin/php/config.php'; // Adjust path as needed
 
 // --- Validate input ---
 if (!isset($_POST['id']) || !is_numeric($_POST['id'])) {

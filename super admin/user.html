@@ -247,10 +247,7 @@
         <label class="block mb-1 font-medium">Phone</label>
         <input type="text" name="phone_number" class="w-full border rounded px-3 py-2" required>
       </div>
-      <div class="mb-3">
-        <label class="block mb-1 font-medium">Password</label>
-        <input type="password" name="password" class="w-full border rounded px-3 py-2" required>
-      </div>
+
       <div class="mb-3">
         <label class="block mb-1 font-medium">Institute Code</label>
         <input type="text" id="institute_code" name="institute_code" class="w-full border rounded px-3 py-2 bg-gray-100" maxlength="4" readonly required>
@@ -412,25 +409,8 @@ async function loadUsers() {
                 alert('User not found!');
                 return;
               }
-              // Fetch password for preview
-              let password = '(set by admin)';
-              try {
-                const passRes = await fetch('php/get_user_password.php', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                  body: 'id=' + encodeURIComponent(id)
-                });
-                const passText = await passRes.text();
-                let passData;
-                try {
-                  passData = JSON.parse(passText);
-                } catch (e) {
-                  console.error('Invalid JSON response:', passText);
-                }
-                if (passData.success) password = passData.password;
-              } catch (e) {}
               // Prepare email preview
-              const preview = `Welcome to Acadexa\n\nDear ${user.full_name},\n\nYour username: ${user.username}\nPassword: ${password}\nInstitute code: ${user.institute_code}\n\nThis information is provided for your access to the Acadexa platform.`;
+              const preview = `Welcome to Acadexa\n\nDear ${user.full_name},\n\nYour login credentials:\nEmail: ${user.email}\nUsername: ${user.username}\nInstitute Code: ${user.institute_code}\n\nPlease visit our platform and set your password on first login.\n\nBest regards,\nAcadexa Team`;
               document.getElementById('emailPreviewContent').textContent = preview;
               document.getElementById('emailPreviewModal').classList.remove('hidden');
               // Store user info for sending
@@ -538,7 +518,7 @@ if (document.getElementById('sendEmailBtn')) {
     const name = this.dataset.name;
     const username = this.dataset.username;
     const institute_code = this.dataset.institute_code;
-    // Optionally, you can fetch the password from the backend if needed (not recommended to send plain password)
+    // Password will be set by the user on their first login
     document.getElementById('emailSendStatus').textContent = 'Sending...';
     try {
       const res = await fetch('php/send_user_mail.php', {

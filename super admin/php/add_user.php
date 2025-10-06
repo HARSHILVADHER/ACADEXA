@@ -1,17 +1,17 @@
 <?php
+header('Content-Type: application/json');
 // Include the database configuration from admin/config.php
-require_once '../../admin/config.php';
+require_once '../../admin/php/config.php';
 
 // Get POST data
 $full_name    = trim($_POST['full_name'] ?? '');
 $username     = trim($_POST['username'] ?? '');
-$password     = $_POST['password'] ?? '';
 $email        = trim($_POST['email'] ?? '');
 $phone_number = trim($_POST['phone_number'] ?? '');
 $institute_code = $_POST['institute_code'] ?? ''; // NEW FIELD
 
 // Basic validation
-if (!$full_name || !$username || !$password || !$email || !$phone_number) {
+if (!$full_name || !$username || !$email || !$phone_number) {
     echo json_encode(['success' => false, 'error' => 'All fields are required.']);
     exit;
 }
@@ -33,12 +33,9 @@ if ($stmt->num_rows > 0) {
 }
 $stmt->close();
 
-// Hash password
-$hashed_password = $password; // Store plain text password TEMPORARILY
-
-// Insert user
-$stmt = $conn->prepare('INSERT INTO users (full_name, username, password, email, phone_number, institute_code) VALUES (?, ?, ?, ?, ?, ?)');
-$stmt->bind_param('ssssss', $full_name, $username, $hashed_password, $email, $phone_number, $institute_code);
+// Insert user without password
+$stmt = $conn->prepare('INSERT INTO users (full_name, username, email, phone_number, institute_code) VALUES (?, ?, ?, ?, ?)');
+$stmt->bind_param('sssss', $full_name, $username, $email, $phone_number, $institute_code);
 if ($stmt->execute()) {
     echo json_encode(['success' => true]);
 } else {

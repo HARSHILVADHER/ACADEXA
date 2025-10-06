@@ -821,7 +821,7 @@
           <div class="icon">
             <i class="fas fa-calendar-check"></i>
           </div>
-          <div class="value">86%</div>
+          <div class="value" id="attendancePercentage">86%</div>
           <div class="label">Attendance Rate</div>
           <div class="change down">
             <i class="fas fa-arrow-down"></i> 2% from last week
@@ -1008,6 +1008,7 @@
             document.getElementById('studentCount').textContent = data.studentCount || 0;
             document.getElementById('classCount').textContent = data.classCount || 0;
             document.getElementById('inquiryCount').textContent = data.inquiryCount || 0;
+            document.getElementById('attendancePercentage').textContent = (data.attendancePercentage || 0) + '%';
             
             // Update tasks
             const taskList = document.getElementById('taskList');

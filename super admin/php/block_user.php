@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once '../../admin/config.php';
+require_once '../../admin/php/config.php';
 $id = intval($_POST['id'] ?? 0);
 if (!$id) {
   echo json_encode(['success' => false, 'error' => 'Invalid user ID.']);

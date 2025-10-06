@@ -65,6 +65,11 @@ $profile_stmt->execute();
 $profile = $profile_stmt->get_result()->fetch_assoc();
 $profile_stmt->close();
 
+// Ensure $profile is an array to prevent null access errors
+if (!$profile) {
+    $profile = [];
+}
+
 
 
 $conn->close();
@@ -832,7 +837,7 @@ $conn->close();
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Date of Birth</div>
-                            <div class="detail-value"><?= $profile['dob'] ? date('M j, Y', strtotime($profile['dob'])) : 'Not provided' ?></div>
+                            <div class="detail-value"><?= ($profile['dob'] ?? '') ? date('M j, Y', strtotime($profile['dob'])) : 'Not provided' ?></div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Gender</div>

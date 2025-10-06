@@ -25,12 +25,50 @@ $stmt->execute();
 $student = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-// Get fee information for display
-$fee_stmt = $conn->prepare("SELECT decided_fees FROM fees_structure WHERE student_id = ? AND user_id = ?");
+// Get comprehensive fee information
+$fee_info = null;
+$fee_stmt = $conn->prepare("SELECT decided_fees, installments FROM fees_structure WHERE student_id = ? AND user_id = ?");
 $fee_stmt->bind_param("ii", $student_id, $user_id);
 $fee_stmt->execute();
 $fee_result = $fee_stmt->get_result()->fetch_assoc();
 $fee_stmt->close();
+
+if ($fee_result) {
+    $installments = json_decode($fee_result['installments'], true) ?: [];
+    $total_installments = count($installments);
+    $total_decided_fees = floatval($fee_result['decided_fees']);
+    
+    // Get paid fees from paid_fees table
+    $paid_stmt = $conn->prepare("SELECT installment_index, amount FROM paid_fees WHERE student_id = ? AND user_id = ? AND is_paid = 1");
+    $paid_stmt->bind_param("ii", $student_id, $user_id);
+    $paid_stmt->execute();
+    $paid_result = $paid_stmt->get_result();
+    
+    $paid_installments = [];
+    $fees_received = 0;
+    while ($row = $paid_result->fetch_assoc()) {
+        $paid_installments[] = $row['installment_index'];
+        $fees_received += floatval($row['amount']);
+    }
+    $paid_stmt->close();
+    
+    // Find next unpaid installment
+    $upcoming_installment = null;
+    foreach ($installments as $index => $installment) {
+        if (!in_array($index, $paid_installments)) {
+            $upcoming_installment = $installment;
+            break;
+        }
+    }
+    
+    $fee_info = [
+        'total_decided_fees' => $total_decided_fees,
+        'total_installments' => $total_installments,
+        'fees_received' => $fees_received,
+        'upcoming_installment' => $upcoming_installment,
+        'balance_due' => $total_decided_fees - $fees_received
+    ];
+}
 
 // Check if profile_image column exists, if not add it
 $result = $conn->query("SHOW COLUMNS FROM students LIKE 'profile_image'");
@@ -686,7 +724,7 @@ $conn->close();
         
         .receipt-row {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr auto;
+            grid-template-columns: 1fr 1fr 1fr 2fr auto;
             gap: 15px;
             align-items: center;
             padding: 15px 0;
@@ -906,15 +944,47 @@ $conn->close();
                     <div class="card-header">
                         <h3 class="card-title"><i class="fas fa-credit-card"></i> Fee Information</h3>
                         <button class="btn-view" onclick="openFeeModal(<?= $student_id ?>)">
-                            <i class="fas fa-eye"></i> View
+                            <i class="fas fa-eye"></i> View Details
                         </button>
                     </div>
-                    <div class="fee-summary">
-                        <div class="fee-row">
-                            <span class="fee-label">Loading fee information...</span>
-                            <span class="fee-amount">-</span>
+                    <?php if ($fee_info): ?>
+                        <div class="fee-summary">
+                            <div class="fee-row">
+                                <span class="fee-label">Total Decided Fees</span>
+                                <span class="fee-amount">₹<?= number_format($fee_info['total_decided_fees'], 2) ?></span>
+                            </div>
+                            <div class="fee-row">
+                                <span class="fee-label">Total Installments</span>
+                                <span class="fee-amount"><?= $fee_info['total_installments'] ?></span>
+                            </div>
+                            <div class="fee-row">
+                                <span class="fee-label">Fees Received</span>
+                                <span class="fee-amount" style="color: var(--success);">₹<?= number_format($fee_info['fees_received'], 2) ?></span>
+                            </div>
+                            <div class="fee-row">
+                                <span class="fee-label">Balance Due</span>
+                                <span class="fee-amount" style="color: var(--danger);">₹<?= number_format($fee_info['balance_due'], 2) ?></span>
+                            </div>
+                            <?php if ($fee_info['upcoming_installment']): ?>
+                                <div class="fee-row total">
+                                    <span class="fee-label">Next Installment</span>
+                                    <span class="fee-amount">₹<?= number_format($fee_info['upcoming_installment']['amount'], 2) ?> <br><small style="font-size: 0.8rem; color: var(--gray);">Due: <?= date('M j, Y', strtotime($fee_info['upcoming_installment']['due_date'])) ?></small></span>
+                                </div>
+                            <?php else: ?>
+                                <div class="fee-row total">
+                                    <span class="fee-label">Next Installment</span>
+                                    <span class="fee-amount" style="color: var(--success);">All Paid</span>
+                                </div>
+                            <?php endif; ?>
                         </div>
-                    </div>
+                    <?php else: ?>
+                        <div class="fee-summary">
+                            <div class="fee-row">
+                                <span class="fee-label">No fee structure found</span>
+                                <span class="fee-amount">-</span>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Emergency Contact -->
@@ -1079,21 +1149,39 @@ $conn->close();
     
     function displayReceiptSection(feeData) {
         const installments = JSON.parse(feeData.installments || '[]');
+        const paidStatus = feeData.paid_status || {};
         let html = '<h5>Payment Receipts:</h5>';
         
         installments.forEach((installment, index) => {
+            const isPaid = paidStatus[index]?.is_paid || false;
+            const paymentMode = paidStatus[index]?.payment_mode || '';
+            const statusText = isPaid ? 'PAID' : 'PENDING';
+            const statusColor = isPaid ? 'var(--success)' : 'var(--warning)';
+            
             html += `
                 <div class="receipt-row">
                     <div>₹${installment.amount}</div>
                     <div>${installment.due_date}</div>
-                    <div class="payment-mode">
-                        <label><input type="radio" name="payment_${index}" value="cash" onchange="showGenerateButton(${index})"> Cash</label>
-                        <label><input type="radio" name="payment_${index}" value="cheque" onchange="showGenerateButton(${index})"> Cheque</label>
-                        <label><input type="radio" name="payment_${index}" value="online" onchange="showGenerateButton(${index})"> Online</label>
+                    <div class="payment-status" style="color: ${statusColor}; font-weight: bold;">
+                        ${statusText}
                     </div>
-                    <button class="btn-generate" id="generate_${index}" onclick="generateReceipt(${index}, ${feeData.student_id})">
-                        Generate
-                    </button>
+                    ${!isPaid ? `
+                        <div class="payment-mode">
+                            <label><input type="radio" name="payment_${index}" value="cash" onchange="showGenerateButton(${index})"> Cash</label>
+                            <label><input type="radio" name="payment_${index}" value="cheque" onchange="showGenerateButton(${index})"> Cheque</label>
+                            <label><input type="radio" name="payment_${index}" value="online" onchange="showGenerateButton(${index})"> Online</label>
+                        </div>
+                        <button class="btn-generate" id="generate_${index}" onclick="generateReceipt(${index}, ${feeData.student_id})">
+                            Generate Receipt
+                        </button>
+                    ` : `
+                        <div style="color: var(--success); font-weight: 500;">
+                            Paid via ${paymentMode.toUpperCase()}
+                        </div>
+                        <button class="btn-generate" style="background: var(--success);" onclick="downloadReceipt(${index}, ${feeData.student_id})">
+                            Download Receipt
+                        </button>
+                    `}
                 </div>
             `;
         });
@@ -1112,8 +1200,11 @@ $conn->close();
             return;
         }
         
-        // Save payment mode to database
-        fetch('save_payment_mode.php', {
+        const btn = document.getElementById(`generate_${index}`);
+        btn.innerHTML = 'Generating...';
+        btn.disabled = true;
+        
+        fetch('generate_receipt.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1127,12 +1218,25 @@ $conn->close();
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Payment mode saved successfully!');
-                // Here you can add further receipt generation logic
+                alert('Receipt generated successfully!');
+                loadFeeData(studentId); // Reload fee data
             } else {
-                alert('Error saving payment mode');
+                alert('Error: ' + data.message);
+                btn.innerHTML = 'Generate Receipt';
+                btn.disabled = false;
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error generating receipt');
+            btn.innerHTML = 'Generate Receipt';
+            btn.disabled = false;
         });
+    }
+    
+    function downloadReceipt(index, studentId) {
+        // Generate PDF receipt for paid installment
+        window.open(`download_receipt.php?student_id=${studentId}&installment_index=${index}`, '_blank');
     }
     
     // Close modal when clicking outside

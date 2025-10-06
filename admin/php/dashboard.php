@@ -103,6 +103,31 @@ if ($taskRoleFilter && in_array($taskRoleFilter, ['admin', 'trustee', 'tutor']))
     $taskRoleTypes .= 's';
 }
 
+// Calculate attendance percentage for this user
+$attendancePercentage = 0;
+// Check if user_id column exists in attendance table
+$result = $conn->query("SHOW COLUMNS FROM attendance LIKE 'user_id'");
+if ($result->num_rows == 0) {
+    $conn->query("ALTER TABLE attendance ADD COLUMN user_id INT DEFAULT NULL");
+}
+
+$sql = "SELECT 
+    COUNT(*) as total_records,
+    SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present_count
+    FROM attendance 
+    WHERE user_id = ? AND date >= DATE_FORMAT(CURDATE(), '%Y-%m-01')";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+if ($result) {
+    $row = $result->fetch_assoc();
+    if ($row['total_records'] > 0) {
+        $attendancePercentage = round(($row['present_count'] / $row['total_records']) * 100);
+    }
+}
+$stmt->close();
+
 // Fetch tasks for this user
 $userTasks = [];
 $sql = "SELECT task_text, task_date, task_for FROM task WHERE user_id = ?$taskRoleWhere ORDER BY task_date DESC LIMIT 10";
@@ -946,7 +971,7 @@ $conn->close();
           <div class="icon">
             <i class="fas fa-calendar-check"></i>
           </div>
-          <div class="value">86%</div>
+          <div class="value"><?php echo $attendancePercentage; ?>%</div>
           <div class="label">Attendance Rate</div>
           <div class="change down">
             <i class="fas fa-arrow-down"></i> 2% from last week
