@@ -943,12 +943,12 @@ $conn->close();
                     </div>
 
                     <!-- Role Assignment -->
-                    <div class="management-card" onclick="window.location.href='roles.php'">
+                    <div class="management-card" onclick="window.location.href='../faculty.html'">
                         <div class="card-icon roles">
                             <i class="fas fa-user-shield"></i>
                         </div>
-                        <h3 class="card-name">Role Assignment</h3>
-                        <p class="card-description">Assign roles and permissions to staff members and administrators</p>
+                        <h3 class="card-name">Faculty Management</h3>
+                        <p class="card-description">Add and manage faculty members, assign roles and permissions</p>
                     </div>
 
                     <!-- Income Management -->

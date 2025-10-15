@@ -12,8 +12,15 @@ $parent_contact = $_POST['parent_contact'] ?? '';
 $student_contact = $_POST['student_contact'] ?? '';
 $email = $_POST['email'] ?? '';
 $classCode = $_POST['classCode'] ?? '';
-$group_name = $_POST['group_name'] ?? null;
+$group_name = $_POST['group_name'] ?? '';
+// Convert empty string to null for database storage
+if (empty($group_name)) {
+    $group_name = null;
+}
 $user_id = $_SESSION['user_id'] ?? null;
+
+// Debug: Log the received data
+error_log("Received data: " . print_r($_POST, true));
 
 if ($name && $dob && $medium && $roll_no && $std && $parent_contact && $email && $classCode && $user_id) {
   $stmt = $conn->prepare("INSERT INTO students (name, dob, medium, roll_no, std, parent_contact, student_contact, email, class_code, group_name, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");

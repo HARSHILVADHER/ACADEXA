@@ -1,42 +1,37 @@
 <?php
-session_start();
 header('Content-Type: application/json');
-
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
-    exit();
-}
-
+session_start();
 require_once 'config.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['class_code'])) {
-    echo json_encode(['success' => false, 'message' => 'Invalid request']);
-    exit();
+try {
+    $classCode = $_GET['classCode'] ?? '';
+    $user_id = $_SESSION['user_id'] ?? null;
+
+    if (!$user_id) {
+        echo json_encode([]);
+        exit;
+    }
+
+    if ($classCode) {
+        $stmt = $conn->prepare("SELECT id, name, roll_no, std, group_name, parent_contact, email FROM students WHERE class_code = ? AND user_id = ? ORDER BY roll_no ASC");
+        $stmt->bind_param("si", $classCode, $user_id);
+    } else {
+        $stmt = $conn->prepare("SELECT id, name, roll_no, std, group_name, parent_contact, email FROM students WHERE user_id = ? ORDER BY class_code, roll_no ASC");
+        $stmt->bind_param("i", $user_id);
+    }
+
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $students = [];
+
+    while ($row = $result->fetch_assoc()) {
+        $students[] = $row;
+    }
+
+    echo json_encode($students);
+    $stmt->close();
+    $conn->close();
+} catch (Exception $e) {
+    echo json_encode([]);
 }
-
-$user_id = $_SESSION['user_id'];
-$class_code = $_POST['class_code'];
-
-$stmt = $conn->prepare("SELECT s.id, s.name, s.class_code, 
-    CASE WHEN f.student_id IS NOT NULL THEN 1 ELSE 0 END as has_fees
-    FROM students s 
-    LEFT JOIN fees_structure f ON s.id = f.student_id AND f.user_id = s.user_id
-    WHERE s.class_code = ? AND s.user_id = ? 
-    ORDER BY has_fees ASC, s.name");
-$stmt->bind_param("si", $class_code, $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-
-$students = [];
-while ($row = $result->fetch_assoc()) {
-    $students[] = $row;
-}
-
-$stmt->close();
-$conn->close();
-
-echo json_encode([
-    'success' => true,
-    'students' => $students
-]);
 ?>

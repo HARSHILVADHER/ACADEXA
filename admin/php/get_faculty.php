@@ -12,20 +12,27 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 
 try {
-    $stmt = $conn->prepare("SELECT s.id, s.name, s.dob, s.medium, s.roll_no, s.std, s.parent_contact, s.student_contact, s.email, s.class_code, s.group_name, c.name as class_name FROM students s LEFT JOIN classes c ON s.class_code = c.code AND s.user_id = c.user_id WHERE s.user_id = ?");
+    // Check if faculty table exists
+    $table_check = $conn->query("SHOW TABLES LIKE 'faculty'");
+    if ($table_check->num_rows == 0) {
+        echo json_encode([]);
+        exit();
+    }
+    
+    $stmt = $conn->prepare("SELECT id, faculty_id, name, dob, contact_number, email, subject, created_at FROM faculty WHERE user_id = ? ORDER BY created_at DESC");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
     
-    $students = [];
+    $faculty = [];
     while ($row = $result->fetch_assoc()) {
-        $students[] = $row;
+        $faculty[] = $row;
     }
     
     $stmt->close();
     $conn->close();
     
-    echo json_encode($students);
+    echo json_encode($faculty);
 } catch (Exception $e) {
     echo json_encode([]);
 }

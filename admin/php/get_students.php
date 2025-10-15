@@ -11,7 +11,7 @@ if (!$user_id) {
 
 $classCode = $_GET['classCode'] ?? '';
 
-$stmt = $conn->prepare("SELECT id, name, age, contact FROM students WHERE class_code = ? AND user_id = ?");
+$stmt = $conn->prepare("SELECT id, name, roll_no, parent_contact FROM students WHERE class_code = ? AND user_id = ?");
 $stmt->bind_param("si", $classCode, $user_id);
 $stmt->execute();
 $result = $stmt->get_result();

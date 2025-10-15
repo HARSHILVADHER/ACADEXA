@@ -1,41 +1,49 @@
 <?php
-// filepath: e:\XAMPP\htdocs\Acadexafinal\delete_class.php
-require 'config.php';
+session_start();
+require_once 'config.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['classCode'])) {
-    $classCode = $_POST['classCode'];
+if (!isset($_SESSION['user_id'])) {
+    echo "unauthorized";
+    exit();
+}
 
-    // Get the class id from the class code
-    $stmt = $conn->prepare("SELECT id FROM classes WHERE code = ?");
-    $stmt->bind_param("s", $classCode);
+$user_id = $_SESSION['user_id'];
+$classCode = $_POST['classCode'] ?? '';
+
+if (empty($classCode)) {
+    echo "Class code is required";
+    exit();
+}
+
+try {
+    // Start transaction
+    $conn->begin_transaction();
+    
+    // First delete all students in this class
+    $stmt = $conn->prepare("DELETE FROM students WHERE class_code = ? AND user_id = ?");
+    $stmt->bind_param("si", $classCode, $user_id);
     $stmt->execute();
-    $stmt->bind_result($classId);
-    if ($stmt->fetch()) {
-        $stmt->close();
-
-        // 1. Delete exams with this class_id
-        $stmtExam = $conn->prepare("DELETE FROM exam WHERE class_id = ?");
-        $stmtExam->bind_param("i", $classId);
-        $stmtExam->execute();
-        $stmtExam->close();
-
-        // 2. Delete students with this class_code
-        $stmt1 = $conn->prepare("DELETE FROM students WHERE class_code = ?");
-        $stmt1->bind_param("s", $classCode);
-        $stmt1->execute();
-        $stmt1->close();
-
-        // 3. Delete the class
-        $stmt2 = $conn->prepare("DELETE FROM classes WHERE id = ?");
-        $stmt2->bind_param("i", $classId);
-        $stmt2->execute();
-        $stmt2->close();
-
+    
+    // Then delete the class
+    $stmt = $conn->prepare("DELETE FROM classes WHERE code = ? AND user_id = ?");
+    $stmt->bind_param("si", $classCode, $user_id);
+    $stmt->execute();
+    
+    if ($stmt->affected_rows > 0) {
+        // Commit transaction
+        $conn->commit();
         echo "success";
     } else {
-        echo "Class not found";
+        // Rollback transaction
+        $conn->rollback();
+        echo "Class not found or you don't have permission to delete it";
     }
-} else {
-    echo "Invalid request";
+    
+    $stmt->close();
+    $conn->close();
+} catch (Exception $e) {
+    // Rollback transaction on error
+    $conn->rollback();
+    echo "Error: " . $e->getMessage();
 }
 ?>

@@ -672,8 +672,8 @@ function loadStudents(classCode) {
             <div class="student-info">
               <div class="student-name">${index + 1}. ${student.name}</div>
               <div class="student-details">
-                <span><i class="fas fa-graduation-cap"></i> Age: ${student.age}</span>
-                <span><i class="fas fa-phone"></i> ${student.contact || 'N/A'}</span>
+                <span><i class="fas fa-id-badge"></i> Roll: ${student.roll_no || 'N/A'}</span>
+                <span><i class="fas fa-phone"></i> ${student.parent_contact || 'N/A'}</span>
               </div>
             </div>
             <label class="attendance-toggle">
@@ -746,9 +746,9 @@ checkboxes.forEach(cb => {
   .then(res => res.json())
   .then(data => {
     if (data.success) {
-      // Find absent students with contact numbers
+      // Find absent students with parent contact numbers
       const absentStudents = studentsData
-        .filter(stu => absentIds.includes(String(stu.id)) && stu.contact && stu.contact.length >= 10);
+        .filter(stu => absentIds.includes(String(stu.id)) && stu.parent_contact && stu.parent_contact.length >= 10);
 
       if (absentStudents.length === 0) {
         alert("Attendance saved! No absent students or no contact numbers found.");
@@ -764,7 +764,7 @@ checkboxes.forEach(cb => {
         function openNext() {
           if (i >= absentStudents.length) return;
           const stu = absentStudents[i];
-          const waUrl = `https://wa.me/${stu.contact}?text=You%20were%20marked%20absent%20today.%20Please%20contact%20your%20class%20teacher%20if%20this%20is%20a%20mistake.`;
+          const waUrl = `https://wa.me/${stu.parent_contact}?text=Your%20child%20${stu.name}%20was%20marked%20absent%20today.%20Please%20contact%20the%20class%20teacher%20if%20this%20is%20a%20mistake.`;
           window.open(waUrl, '_blank');
           i++;
           setTimeout(openNext, 1200);

@@ -213,6 +213,40 @@ $conn->close();
     nav {
       display: flex;
       gap: 15px;
+      align-items: center;
+    }
+    
+    .birthday-icon {
+      position: relative;
+      margin-left: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .birthday-icon:hover {
+      transform: scale(1.1);
+    }
+    
+    .birthday-icon i {
+      font-size: 1.5rem;
+      color: var(--accent);
+    }
+    
+    .birthday-count {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      min-width: 20px;
     }
 
     nav a {
@@ -932,7 +966,12 @@ $conn->close();
       <a href="../attendance.html">Attendance</a>
       <a href="gradecard.php">Reports</a>
       <a href="inquiry.php">Inquiries</a>
+      <a href="../faculty.html">Faculty</a>
       <a href="profile.php">Profile</a>
+      <div class="birthday-icon" onclick="window.location.href='../birthdays.html'" title="Today's Birthdays">
+        <i class="fas fa-birthday-cake"></i>
+        <span class="birthday-count" id="birthdayCount">0</span>
+      </div>
     </nav>
   </header>
 
@@ -1236,8 +1275,31 @@ $conn->close();
   </div>
 
   <script>
+    // Load birthday count
+    function loadBirthdayCount() {
+      fetch('get_birthdays.php')
+        .then(response => response.json())
+        .then(data => {
+          const count = data.total_count || 0;
+          document.getElementById('birthdayCount').textContent = count;
+          
+          // Hide birthday icon if no birthdays
+          const birthdayIcon = document.querySelector('.birthday-icon');
+          if (count === 0) {
+            birthdayIcon.style.display = 'none';
+          } else {
+            birthdayIcon.style.display = 'block';
+          }
+        })
+        .catch(error => {
+          console.error('Error loading birthday count:', error);
+          document.getElementById('birthdayCount').textContent = '0';
+        });
+    }
+
     // Add animation classes on scroll
     document.addEventListener('DOMContentLoaded', function() {
+      loadBirthdayCount();
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {

@@ -18,12 +18,40 @@ if (!$student_id) {
     exit();
 }
 
-// Get student info
-$stmt = $conn->prepare("SELECT * FROM students WHERE id = ? AND user_id = ?");
+// Get student info with class name
+$stmt = $conn->prepare("SELECT s.*, c.name as class_name FROM students s LEFT JOIN classes c ON s.class_code = c.code AND s.user_id = c.user_id WHERE s.id = ? AND s.user_id = ?");
 $stmt->bind_param("ii", $student_id, $user_id);
 $stmt->execute();
 $student = $stmt->get_result()->fetch_assoc();
 $stmt->close();
+
+// Calculate actual attendance percentage
+$attendance_percentage = 0;
+if (isset($student['class_code'])) {
+    // Check if attendance table exists
+    $table_check = $conn->query("SHOW TABLES LIKE 'attendance'");
+    if ($table_check && $table_check->num_rows > 0) {
+        // Get total attendance records for this student
+        $total_stmt = $conn->prepare("SELECT COUNT(*) as total FROM attendance WHERE student_id = ? AND user_id = ?");
+        $total_stmt->bind_param("ii", $student_id, $user_id);
+        $total_stmt->execute();
+        $total_result = $total_stmt->get_result()->fetch_assoc();
+        $total_days = $total_result['total'];
+        $total_stmt->close();
+        
+        if ($total_days > 0) {
+            // Get present days
+            $present_stmt = $conn->prepare("SELECT COUNT(*) as present FROM attendance WHERE student_id = ? AND user_id = ? AND status = 'present'");
+            $present_stmt->bind_param("ii", $student_id, $user_id);
+            $present_stmt->execute();
+            $present_result = $present_stmt->get_result()->fetch_assoc();
+            $present_days = $present_result['present'];
+            $present_stmt->close();
+            
+            $attendance_percentage = round(($present_days / $total_days) * 100, 1);
+        }
+    }
+}
 
 // Get comprehensive fee information
 $fee_info = null;
@@ -839,9 +867,9 @@ $conn->close();
                     </div>
                     <input type="file" id="imageUpload" accept="image/*">
                     <h2 class="profile-name"><?= htmlspecialchars($student['name']) ?></h2>
-                    <p class="profile-id">ID: #<?= str_pad($student['id'], 4, '0', STR_PAD_LEFT) ?></p>
                     <div class="profile-status">
                         <span class="status-badge active">Active Student</span>
+                        <p class="profile-roll" style="margin-top: 8px; opacity: 0.8; font-size: 0.9rem;">Roll No: <?= htmlspecialchars($student['roll_no'] ?? 'Not provided') ?></p>
                     </div>
                 </div>
 
@@ -850,20 +878,12 @@ $conn->close();
                     <h3 class="card-title">Quick Stats</h3>
                     <div class="stat-grid">
                         <div class="stat">
-                            <div class="stat-number"><?= htmlspecialchars($student['age']) ?></div>
+                            <div class="stat-number"><?= $student['dob'] ? floor((time() - strtotime($student['dob'])) / (365.25 * 24 * 60 * 60)) : 'N/A' ?></div>
                             <div class="stat-label">Age</div>
                         </div>
                         <div class="stat">
-                            <div class="stat-number"><?= htmlspecialchars($student['class_code']) ?></div>
-                            <div class="stat-label">Class</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-number">92%</div>
+                            <div class="stat-number"><?= $attendance_percentage ?>%</div>
                             <div class="stat-label">Attendance</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-number">A-</div>
-                            <div class="stat-label">Grade</div>
                         </div>
                     </div>
                 </div>
@@ -873,7 +893,7 @@ $conn->close();
                     <h3 class="card-title">Contact Info</h3>
                     <div class="contact-item">
                         <i class="fas fa-phone"></i>
-                        <span><?= htmlspecialchars($student['contact']) ?></span>
+                        <span><?= htmlspecialchars($student['parent_contact'] ?? 'Not provided') ?></span>
                     </div>
                     <div class="contact-item">
                         <i class="fas fa-envelope"></i>
@@ -921,8 +941,8 @@ $conn->close();
                     </div>
                     <div class="details-grid">
                         <div class="detail-item">
-                            <span class="detail-label">Class Code</span>
-                            <span class="detail-value"><?= htmlspecialchars($student['class_code']) ?></span>
+                            <span class="detail-label">Class</span>
+                            <span class="detail-value"><?= htmlspecialchars($student['class_name'] ?? $student['class_code']) ?></span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Enrollment Date</span>
@@ -987,23 +1007,31 @@ $conn->close();
                     <?php endif; ?>
                 </div>
 
-                <!-- Emergency Contact -->
+                <!-- Student Details -->
                 <div class="content-card">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-user-friends"></i> Emergency Contact</h3>
+                        <h3 class="card-title"><i class="fas fa-user"></i> Student Details</h3>
                     </div>
-                    <div class="emergency-info">
-                        <div class="emergency-item">
-                            <div class="emergency-label">Guardian Name</div>
-                            <div class="emergency-value">Not provided</div>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Date of Birth</span>
+                            <span class="detail-value"><?= $student['dob'] ? date('M j, Y', strtotime($student['dob'])) : 'Not provided' ?></span>
                         </div>
-                        <div class="emergency-item">
-                            <div class="emergency-label">Guardian Contact</div>
-                            <div class="emergency-value">Not provided</div>
+                        <div class="detail-item">
+                            <span class="detail-label">Parent Contact</span>
+                            <span class="detail-value"><?= htmlspecialchars($student['parent_contact'] ?? 'Not provided') ?></span>
                         </div>
-                        <div class="emergency-item">
-                            <div class="emergency-label">Relationship</div>
-                            <div class="emergency-value">Parent/Guardian</div>
+                        <div class="detail-item">
+                            <span class="detail-label">Student Contact</span>
+                            <span class="detail-value"><?= htmlspecialchars($student['student_contact'] ?? 'Not provided') ?></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Standard</span>
+                            <span class="detail-value"><?= htmlspecialchars($student['std'] ?? 'Not provided') ?></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Medium</span>
+                            <span class="detail-value"><?= htmlspecialchars($student['medium'] ?? 'Not provided') ?></span>
                         </div>
                     </div>
                 </div>

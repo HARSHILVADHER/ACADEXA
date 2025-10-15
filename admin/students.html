@@ -108,7 +108,7 @@
       }
     }
     .container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 2rem auto;
       background-color: #fff;
       padding: 2rem;
@@ -204,7 +204,7 @@
           <th>Parent Contact</th>
           <th>Student Contact</th>
           <th>Email</th>
-          <th>Class Code</th>
+          <th>Class</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -229,7 +229,7 @@
             classes.forEach(cls => {
               const option = document.createElement('option');
               option.value = cls.code;
-              option.textContent = cls.code;
+              option.textContent = cls.name;
               select.appendChild(option);
             });
           } catch (e) {
@@ -265,7 +265,7 @@
                 <td>${student.parent_contact || 'N/A'}</td>
                 <td>${student.student_contact || 'N/A'}</td>
                 <td>${student.email}</td>
-                <td>${student.class_code}</td>
+                <td data-class-code="${student.class_code}">${student.class_name || student.class_code}</td>
                 <td><button class="view-btn" onclick="viewStudent(${student.id})">View</button></td>
               `;
               tbody.appendChild(row);
@@ -289,23 +289,22 @@
       rows.forEach(row => {
         if (row.cells.length < 10) return; // Skip error rows
         const name = row.cells[0].textContent.toLowerCase();
-        const classCode = row.cells[8].textContent;
+        const classCode = row.cells[8].getAttribute('data-class-code') || row.cells[8].textContent;
         const matchesSearch = name.includes(input);
         const matchesClass = filterClass === "" || classCode === filterClass;
         row.style.display = matchesSearch && matchesClass ? "" : "none";
       });
     }
 
-    function viewStudent(studentId) {
-      window.location.href = `php/student_profile.php?id=${studentId}`;
+    function viewStudent(id) {
+      window.location.href = `php/student_profile.php?id=${id}`;
     }
 
-    // Load data on page load
+    // Load data when page loads
     document.addEventListener('DOMContentLoaded', function() {
       loadClasses();
       loadStudents();
     });
   </script>
-
 </body>
 </html>
