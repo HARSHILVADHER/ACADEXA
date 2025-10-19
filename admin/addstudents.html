@@ -420,11 +420,11 @@
 
     // Load classes for dropdown (returns Promise with classes array)
     function loadClasses() {
-      return fetch('php/get_classes.php')
-        .then(response => response.text())
-        .then(text => {
-          try {
-            const classes = JSON.parse(text);
+      return fetch('php/get_classes_universal.php')
+        .then(response => response.json())
+        .then(result => {
+          if (result.success && Array.isArray(result.data)) {
+            const classes = result.data;
             const select = document.getElementById('classCode');
             // clear existing except default
             select.innerHTML = '<option value="">Select Class</option>';
@@ -444,8 +444,8 @@
             });
             
             return classes;
-          } catch (e) {
-            console.error('Error parsing classes:', e);
+          } else {
+            console.error('Classes response error:', result.message || 'Invalid data format');
             return [];
           }
         })

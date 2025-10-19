@@ -18,10 +18,10 @@ $create_table_sql = "CREATE TABLE IF NOT EXISTS fees_structure (
     id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT NOT NULL,
     student_name VARCHAR(255) NOT NULL,
-    student_roll_no INT NOT NULL,
+    student_roll_no VARCHAR(50),
     class_code VARCHAR(50) NOT NULL,
     decided_fees DECIMAL(10,2) NOT NULL,
-    installments JSON,
+    installments TEXT,
     notes TEXT,
     user_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['save_fees'])) {
         $success_count = 0;
         foreach ($selected_students as $student_id) {
             // Get student details
-            $student_stmt = $conn->prepare("SELECT s.name, s.class_code, s.id as roll_no FROM students s WHERE s.id = ? AND s.user_id = ?");
+            $student_stmt = $conn->prepare("SELECT s.name, s.class_code, s.roll_no FROM students s WHERE s.id = ? AND s.user_id = ?");
             $student_stmt->bind_param("ii", $student_id, $user_id);
             $student_stmt->execute();
             $student = $student_stmt->get_result()->fetch_assoc();
@@ -108,9 +108,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['save_fees'])) {
     }
 }
 
-// Get all classes
-$classes_result = $conn->query("SELECT DISTINCT class_code FROM students WHERE user_id = $user_id ORDER BY class_code");
-$classes = $classes_result->fetch_all(MYSQLI_ASSOC);
+// Get all classes from both students and classes tables
+$classes = [];
+$classes_stmt = $conn->prepare("
+    SELECT DISTINCT class_code 
+    FROM (
+        SELECT DISTINCT class_code FROM students WHERE user_id = ? AND class_code IS NOT NULL AND class_code != ''
+        UNION
+        SELECT DISTINCT code as class_code FROM classes WHERE user_id = ?
+    ) AS all_classes 
+    ORDER BY class_code
+");
+$classes_stmt->bind_param("ii", $user_id, $user_id);
+$classes_stmt->execute();
+$classes_result = $classes_stmt->get_result();
+while ($row = $classes_result->fetch_assoc()) {
+    $classes[] = $row;
+}
+$classes_stmt->close();
 
 $conn->close();
 ?>

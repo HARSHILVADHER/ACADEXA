@@ -590,24 +590,13 @@ let studentsData = [];
 
 // Load classes from backend
 function loadClasses() {
-  fetch("php/get_classes.php")
-    .then(res => res.text())
-    .then(text => {
-      try {
-        const classes = JSON.parse(text);
-        classList.innerHTML = "";
-        
-        if (classes.length === 0) {
-          classList.innerHTML = `
-            <div class="empty-classes">
-              <i class="fas fa-chalkboard-teacher"></i>
-              <p>No classes available</p>
-            </div>
-          `;
-          return;
-        }
-        
-        classes.forEach(cls => {
+  fetch("php/get_classes_universal.php")
+    .then(res => res.json())
+    .then(result => {
+      classList.innerHTML = "";
+      
+      if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+        result.data.forEach(cls => {
           const li = document.createElement('li');
           li.className = 'class-item animate-fade';
           li.innerHTML = `
@@ -624,12 +613,11 @@ function loadClasses() {
           };
           classList.appendChild(li);
         });
-      } catch (e) {
-        console.error('Error parsing classes:', e);
+      } else {
         classList.innerHTML = `
           <div class="empty-classes">
-            <i class="fas fa-exclamation-triangle"></i>
-            <p>Error loading classes</p>
+            <i class="fas fa-chalkboard-teacher"></i>
+            <p>No classes available</p>
           </div>
         `;
       }
