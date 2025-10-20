@@ -1,4 +1,5 @@
 <?php
+session_start();
 ini_set('display_errors', '0');
 ini_set('display_startup_errors', '0');
 error_reporting(0);
@@ -6,6 +7,7 @@ error_reporting(0);
 header('Content-Type: application/json; charset=utf-8');
 ob_start();
 
+require_once 'config.php';
 require_once '../../super admin/PHPMailer/Exception.php';
 require_once '../../super admin/PHPMailer/PHPMailer.php';
 require_once '../../super admin/PHPMailer/SMTP.php';
@@ -14,6 +16,11 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 try {
+    // Check if user is authenticated
+    if (!isset($_SESSION['user_id'])) {
+        throw new Exception('User not authenticated.');
+    }
+    
     // Read and decode JSON input
     $raw = file_get_contents('php://input');
     $input = json_decode($raw, true);
@@ -33,6 +40,28 @@ try {
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         throw new Exception('Invalid email address.');
+    }
+    
+    // Verify that the user can send greeting to this person
+    $user_id = $_SESSION['user_id'];
+    $canSend = false;
+    
+    if ($type === 'student') {
+        $stmt = $conn->prepare("SELECT id FROM students WHERE email = ? AND user_id = ?");
+        $stmt->bind_param('si', $email, $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $canSend = $result->num_rows > 0;
+    } elseif ($type === 'faculty') {
+        $stmt = $conn->prepare("SELECT id FROM faculty WHERE email = ? AND user_id = ?");
+        $stmt->bind_param('si', $email, $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $canSend = $result->num_rows > 0;
+    }
+    
+    if (!$canSend) {
+        throw new Exception('You can only send greetings to your own students and faculty.');
     }
 
     // Clean any buffered output

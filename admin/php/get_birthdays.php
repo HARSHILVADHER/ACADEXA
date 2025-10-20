@@ -11,19 +11,20 @@ if (!isset($_SESSION['user_id'])) {
 
 try {
     $today = date('m-d');
+    $user_id = $_SESSION['user_id'];
     
-    // Get student birthdays using mysqli
-    $query = "SELECT name, email, dob FROM students WHERE DATE_FORMAT(dob, '%m-%d') = ? ORDER BY name";
+    // Get student birthdays for current user only
+    $query = "SELECT name, email, dob FROM students WHERE DATE_FORMAT(dob, '%m-%d') = ? AND user_id = ? ORDER BY name";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param('s', $today);
+    $stmt->bind_param('si', $today, $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
     $students = $result->fetch_all(MYSQLI_ASSOC);
     
-    // Get faculty birthdays using mysqli
-    $query = "SELECT name, email, dob FROM faculty WHERE DATE_FORMAT(dob, '%m-%d') = ? ORDER BY name";
+    // Get faculty birthdays for current user only
+    $query = "SELECT name, email, dob FROM faculty WHERE DATE_FORMAT(dob, '%m-%d') = ? AND user_id = ? ORDER BY name";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param('s', $today);
+    $stmt->bind_param('si', $today, $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
     $faculty = $result->fetch_all(MYSQLI_ASSOC);

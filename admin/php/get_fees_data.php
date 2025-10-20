@@ -10,13 +10,13 @@ if (!$user_id) {
 
 $feesFilter = $_POST['fees_filter'] ?? 'all';
 
-// Fetch upcoming fees installments
+// Fetch upcoming fees installments (excluding paid ones)
 $upcomingFees = [];
 $feesWhere = "f.user_id = ?";
 if ($feesFilter !== 'all') {
     $feesWhere .= " AND f.class_code = ?";
 }
-$sql = "SELECT f.student_name, f.class_code, f.installments 
+$sql = "SELECT f.student_id, f.student_name, f.class_code, f.installments 
         FROM fees_structure f 
         WHERE $feesWhere ORDER BY f.student_name LIMIT 50";
 $stmt = $conn->prepare($sql);
@@ -32,13 +32,23 @@ while ($row = $result->fetch_assoc()) {
     if ($installments) {
         foreach ($installments as $index => $installment) {
             if (strtotime($installment['due_date']) >= strtotime('today')) {
-                $upcomingFees[] = [
-                    'student_name' => $row['student_name'],
-                    'class_code' => $row['class_code'],
-                    'installment_no' => $index + 1,
-                    'due_date' => $installment['due_date'],
-                    'amount' => $installment['amount']
-                ];
+                // Check if this installment is already paid
+                $paidCheck = $conn->prepare("SELECT id FROM paid_fees WHERE student_id = ? AND installment_index = ? AND user_id = ? AND is_paid = 1");
+                $paidCheck->bind_param("iii", $row['student_id'], $index, $user_id);
+                $paidCheck->execute();
+                $paidResult = $paidCheck->get_result();
+                
+                // Only add to upcoming fees if not paid
+                if ($paidResult->num_rows == 0) {
+                    $upcomingFees[] = [
+                        'student_name' => $row['student_name'],
+                        'class_code' => $row['class_code'],
+                        'installment_no' => $index + 1,
+                        'due_date' => $installment['due_date'],
+                        'amount' => $installment['amount']
+                    ];
+                }
+                $paidCheck->close();
             }
         }
     }

@@ -8,6 +8,27 @@ if (!$user_id) {
     exit();
 }
 
+// Get username for greeting
+$username = 'User';
+$stmt = $conn->prepare("SELECT username FROM users WHERE id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+if ($result && $row = $result->fetch_assoc()) {
+    $username = $row['username'];
+}
+$stmt->close();
+
+// Generate time-based greeting
+$hour = date('H');
+if ($hour < 12) {
+    $greeting = "Good morning";
+} elseif ($hour < 17) {
+    $greeting = "Good afternoon";
+} else {
+    $greeting = "Good evening";
+}
+
 // Inquiries count for this user
 $inquiryCount = 0;
 $sql = "SELECT COUNT(*) AS total FROM inquiry WHERE user_id = ?";
@@ -145,14 +166,14 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 
-// Fetch upcoming fees installments
+// Fetch upcoming fees installments (excluding paid ones)
 $upcomingFees = [];
 $feesFilter = $_GET['fees_filter'] ?? 'all';
 $feesWhere = "f.user_id = ?";
 if ($feesFilter !== 'all') {
     $feesWhere .= " AND f.class_code = ?";
 }
-$sql = "SELECT f.student_name, f.class_code, f.installments 
+$sql = "SELECT f.student_id, f.student_name, f.class_code, f.installments 
         FROM fees_structure f 
         WHERE $feesWhere ORDER BY f.student_name LIMIT 50";
 $stmt = $conn->prepare($sql);
@@ -168,13 +189,23 @@ while ($row = $result->fetch_assoc()) {
     if ($installments) {
         foreach ($installments as $index => $installment) {
             if (strtotime($installment['due_date']) >= strtotime('today')) {
-                $upcomingFees[] = [
-                    'student_name' => $row['student_name'],
-                    'class_code' => $row['class_code'],
-                    'installment_no' => $index + 1,
-                    'due_date' => $installment['due_date'],
-                    'amount' => $installment['amount']
-                ];
+                // Check if this installment is already paid
+                $paidCheck = $conn->prepare("SELECT id FROM paid_fees WHERE student_id = ? AND installment_index = ? AND user_id = ? AND is_paid = 1");
+                $paidCheck->bind_param("iii", $row['student_id'], $index, $user_id);
+                $paidCheck->execute();
+                $paidResult = $paidCheck->get_result();
+                
+                // Only add to upcoming fees if not paid
+                if ($paidResult->num_rows == 0) {
+                    $upcomingFees[] = [
+                        'student_name' => $row['student_name'],
+                        'class_code' => $row['class_code'],
+                        'installment_no' => $index + 1,
+                        'due_date' => $installment['due_date'],
+                        'amount' => $installment['amount']
+                    ];
+                }
+                $paidCheck->close();
             }
         }
     }
@@ -653,6 +684,27 @@ $conn->close();
     .task-list {
       list-style: none;
       flex-grow: 1;
+      overflow-y: auto;
+      max-height: 350px;
+      padding-right: 5px;
+    }
+
+    .task-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .task-list::-webkit-scrollbar-track {
+      background: var(--light-gray);
+      border-radius: 3px;
+    }
+
+    .task-list::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 3px;
+    }
+
+    .task-list::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-dark);
     }
 
     .task-item {
@@ -732,6 +784,27 @@ $conn->close();
     .exam-list {
       list-style: none;
       flex-grow: 1;
+      overflow-y: auto;
+      max-height: 350px;
+      padding-right: 5px;
+    }
+
+    .exam-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .exam-list::-webkit-scrollbar-track {
+      background: var(--light-gray);
+      border-radius: 3px;
+    }
+
+    .exam-list::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 3px;
+    }
+
+    .exam-list::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-dark);
     }
 
     .exam-item {
@@ -809,6 +882,32 @@ $conn->close();
       border: 1px solid rgba(67, 97, 238, 0.1);
       display: flex;
       flex-direction: column;
+      height: 500px;
+    }
+
+    .inquiries-card > div:nth-child(2) {
+      flex-grow: 1;
+      overflow-y: auto;
+      max-height: 350px;
+      padding-right: 5px;
+    }
+
+    .inquiries-card > div:nth-child(2)::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .inquiries-card > div:nth-child(2)::-webkit-scrollbar-track {
+      background: var(--light-gray);
+      border-radius: 3px;
+    }
+
+    .inquiries-card > div:nth-child(2)::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 3px;
+    }
+
+    .inquiries-card > div:nth-child(2)::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-dark);
     }
 
     .inquiry-table {
@@ -1027,6 +1126,19 @@ $conn->close();
     .hover-underline:hover::after {
       width: 100%;
     }
+
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .greeting {
+      color: var(--primary);
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
   </style>
 </head>
 
@@ -1039,7 +1151,6 @@ $conn->close();
       <a href="../attendance.html">Attendance</a>
       <a href="gradecard.php">Reports</a>
       <a href="inquiry.php">Inquiries</a>
-      <a href="../faculty.html">Faculty</a>
       <a href="profile.php">Profile</a>
       <div class="birthday-icon" onclick="window.location.href='../birthdays.html'" title="Today's Birthdays">
         <i class="fas fa-birthday-cake"></i>
@@ -1049,8 +1160,15 @@ $conn->close();
   </header>
 
   <div class="container">
-    <h1 class="animate-fade">Dashboard</h1>
-    <p class="subtext animate-fade delay-1">Welcome back! Here's what's happening with your academy today.</p>
+    <div class="dashboard-header">
+      <div>
+        <h1 class="animate-fade">Dashboard</h1>
+        <p class="subtext animate-fade delay-1">Welcome back! Here's what's happening with your academy today.</p>
+      </div>
+      <div class="greeting animate-fade delay-1">
+        <?php echo $greeting . ' "' . htmlspecialchars($username) . '"'; ?>
+      </div>
+    </div>
 
     <!-- Stats Cards -->
     <div class="stats-grid">

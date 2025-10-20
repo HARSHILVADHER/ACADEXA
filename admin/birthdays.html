@@ -395,7 +395,7 @@
     <!-- Header -->
     <div class="top-header">
         <div class="logo">Acadexa</div>
-        <a href="dashboard.html" class="home-btn">
+        <a href="php/dashboard.php" class="home-btn">
             <i class="fas fa-home"></i>
             Home
         </a>
@@ -406,7 +406,7 @@
         <!-- Page Header -->
         <div class="page-header animate-fade">
             <h1>🎉 Birthday Celebrations 🎂</h1>
-            <p>Celebrating special moments together at Acadexa!</p>
+            <p>Celebrating special moments with your students and faculty!</p>
             <div class="birthday-stats">
                 <div class="stat-item">
                     <div class="stat-number" id="studentBirthdayCount">0</div>
@@ -424,7 +424,7 @@
             <div class="section animate-fade delay-1">
                 <h2 class="section-title">
                     <i class="fas fa-graduation-cap"></i>
-                    Students Birthdays
+                    Your Students' Birthdays
                 </h2>
                 <div id="student-birthdays" class="birthday-cards">
                     <div class="loading">
@@ -437,7 +437,7 @@
             <div class="section animate-fade delay-2">
                 <h2 class="section-title">
                     <i class="fas fa-chalkboard-teacher"></i>
-                    Faculty Birthdays
+                    Your Faculty's Birthdays
                 </h2>
                 <div id="faculty-birthdays" class="birthday-cards">
                     <div class="loading">
@@ -450,10 +450,27 @@
     </div>
 
     <script>
-        // Load birthdays on page load
+        // Check authentication and load birthdays on page load
         document.addEventListener('DOMContentLoaded', function() {
-            loadBirthdays();
+            checkAuthentication();
         });
+        
+        async function checkAuthentication() {
+            try {
+                const response = await fetch('php/check_session.php');
+                const data = await response.json();
+                
+                if (!data.authenticated) {
+                    window.location.href = 'php/login.php';
+                    return;
+                }
+                
+                loadBirthdays();
+            } catch (error) {
+                console.error('Authentication check failed:', error);
+                window.location.href = 'php/login.php';
+            }
+        }
 
         async function loadBirthdays() {
             try {
