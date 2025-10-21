@@ -19,7 +19,7 @@ try {
         exit();
     }
     
-    $stmt = $conn->prepare("SELECT id, faculty_id, name, dob, contact_number, email, subject, created_at FROM faculty WHERE user_id = ? ORDER BY created_at DESC");
+    $stmt = $conn->prepare("SELECT id, faculty_id, name, dob, contact_number, email, subject, created_at, block_status FROM faculty WHERE user_id = ? ORDER BY created_at DESC");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();

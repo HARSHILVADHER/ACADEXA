@@ -952,7 +952,7 @@ $conn->close();
                     </div>
 
                     <!-- Income Management -->
-                    <div class="management-card" onclick="window.location.href='income.php'">
+                    <div class="management-card" onclick="showIncomePasswordModal()">
                         <div class="card-icon income">
                             <i class="fas fa-coins"></i>
                         </div>
@@ -969,6 +969,20 @@ $conn->close();
                         <p class="card-description">Configure system preferences, backup data, and security settings</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Income Password Modal -->
+    <div id="incomePasswordModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 30px; border-radius: 15px; width: 400px; max-width: 90%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <h3 style="margin-bottom: 20px; color: var(--primary);">Enter Password</h3>
+            <p style="margin-bottom: 20px; color: var(--gray);">Please enter your password to access Income Management</p>
+            <input type="password" id="incomePassword" placeholder="Enter your password" style="width: 100%; padding: 12px; border: 2px solid var(--light-gray); border-radius: 8px; margin-bottom: 20px; font-size: 16px; outline: none;">
+            <div id="passwordError" style="color: var(--danger); margin-bottom: 15px; display: none;">Incorrect password. Please try again.</div>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button onclick="closeIncomePasswordModal()" style="padding: 10px 20px; background: var(--light-gray); color: var(--gray); border: none; border-radius: 8px; cursor: pointer;">Cancel</button>
+                <button onclick="verifyIncomePassword()" style="padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer;">Access</button>
             </div>
         </div>
     </div>
@@ -1026,6 +1040,57 @@ $conn->close();
             console.error('Error:', error);
             alert('Upload failed. Please try again.');
         });
+    });
+
+    // Income Management Password Modal Functions
+    function showIncomePasswordModal() {
+        document.getElementById('incomePasswordModal').style.display = 'flex';
+        document.getElementById('incomePassword').focus();
+    }
+
+    function closeIncomePasswordModal() {
+        document.getElementById('incomePasswordModal').style.display = 'none';
+        document.getElementById('incomePassword').value = '';
+        document.getElementById('passwordError').style.display = 'none';
+    }
+
+    function verifyIncomePassword() {
+        const password = document.getElementById('incomePassword').value;
+        if (!password) {
+            document.getElementById('passwordError').textContent = 'Please enter a password';
+            document.getElementById('passwordError').style.display = 'block';
+            return;
+        }
+
+        fetch('verify_income_password.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'password=' + encodeURIComponent(password)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = 'income.php';
+            } else {
+                document.getElementById('passwordError').textContent = data.message || 'Incorrect password';
+                document.getElementById('passwordError').style.display = 'block';
+                document.getElementById('incomePassword').value = '';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('passwordError').textContent = 'An error occurred. Please try again.';
+            document.getElementById('passwordError').style.display = 'block';
+        });
+    }
+
+    // Allow Enter key to submit password
+    document.getElementById('incomePassword').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            verifyIncomePassword();
+        }
     });
     </script>
 </body>

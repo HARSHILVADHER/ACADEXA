@@ -363,6 +363,16 @@
             color: var(--white);
         }
 
+        .btn-unblock {
+            background: rgba(76, 201, 240, 0.1);
+            color: var(--success);
+        }
+
+        .btn-unblock:hover {
+            background: var(--success);
+            color: var(--white);
+        }
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -809,52 +819,22 @@
         </div>
     </div>
 
-    <!-- Edit Faculty Modal -->
-    <div id="editModal" class="modal">
-        <div class="modal-content profile-modal">
+    <!-- Block Confirmation Modal -->
+    <div id="blockModal" class="modal">
+        <div class="modal-content confirm-modal">
             <div class="modal-header">
-                <h2 class="modal-title">Faculty Profile</h2>
-                <span class="close" onclick="closeEditModal()">&times;</span>
+                <h2 class="modal-title" id="blockModalTitle">Block Faculty</h2>
+                <span class="close" onclick="closeBlockModal()">&times;</span>
             </div>
             <div class="modal-body">
-                <div class="profile-header">
-                    <div class="profile-avatar" id="editAvatar">AB</div>
-                    <div class="profile-info">
-                        <h3 id="editName">Faculty Name</h3>
-                        <div class="profile-id" id="editFacultyId">ID: FAC001</div>
-                    </div>
+                <i class="fas fa-user-slash confirm-icon" id="blockModalIcon"></i>
+                <div class="confirm-text" id="blockModalText">Are you sure you want to block this faculty member?</div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeBlockModal()">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmBlockBtn" onclick="confirmBlockAction()">
+                        <i class="fas fa-ban"></i> <span id="blockBtnText">Block</span>
+                    </button>
                 </div>
-                
-                <form id="editForm">
-                    <div class="profile-details">
-                        <div class="profile-field">
-                            <label>Subject</label>
-                            <div class="value" id="editSubject">Mathematics</div>
-                        </div>
-                        
-                        <div class="profile-field">
-                            <label>Date of Birth</label>
-                            <div class="value" id="editDob">01/01/1990</div>
-                        </div>
-                        
-                        <div class="profile-field editable">
-                            <label for="editContactNumber">Contact Number *</label>
-                            <input type="tel" class="value" id="editContactNumber" name="contact_number" required>
-                        </div>
-                        
-                        <div class="profile-field editable">
-                            <label for="editEmail">Email ID *</label>
-                            <input type="email" class="value" id="editEmailField" name="email" required>
-                        </div>
-                    </div>
-                    
-                    <div class="modal-buttons">
-                        <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Save Changes
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
@@ -871,47 +851,20 @@
             document.getElementById('facultyForm').reset();
         }
 
-        // Handle edit form submission
-        document.getElementById('editForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            if (!currentEditId) return;
-            
-            const formData = new FormData();
-            formData.append('faculty_id', currentEditId);
-            formData.append('contact_number', document.getElementById('editContactNumber').value);
-            formData.append('email', document.getElementById('editEmailField').value);
-            
-            fetch('php/update_faculty.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.text())
-            .then(data => {
-                if (data.trim() === 'success') {
-                    closeEditModal();
-                    loadFaculty();
-                } else {
-                    console.error('Update error:', data);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        });
+
 
         // Close modal when clicking outside
         window.onclick = function(event) {
             const facultyModal = document.getElementById('facultyModal');
             const confirmModal = document.getElementById('confirmModal');
-            const editModal = document.getElementById('editModal');
+            const blockModal = document.getElementById('blockModal');
             
             if (event.target == facultyModal) {
                 closeModal();
             } else if (event.target == confirmModal) {
                 closeConfirmModal();
-            } else if (event.target == editModal) {
-                closeEditModal();
+            } else if (event.target == blockModal) {
+                closeBlockModal();
             }
         }
 
@@ -921,21 +874,36 @@
             
             const formData = new FormData(this);
             
+            // Validate required fields
+            const name = formData.get('name');
+            const faculty_id = formData.get('faculty_id');
+            const contact_number = formData.get('contact_number');
+            const email = formData.get('email');
+            const subject = formData.get('subject');
+            
+            if (!name || !faculty_id || !contact_number || !email || !subject) {
+                alert('Please fill all required fields');
+                return;
+            }
+            
             fetch('php/add_faculty.php', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.text())
             .then(data => {
+                console.log('Server response:', data);
                 if (data.trim() === 'success') {
+                    alert('Faculty added successfully!');
                     closeModal();
                     loadFaculty();
                 } else {
-                    console.error('Error:', data);
+                    alert('Error: ' + data);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
+                alert('Network error. Please try again.');
             });
         });
 
@@ -1010,13 +978,13 @@
                     
                     <div class="faculty-actions">
                         <button class="action-btn btn-edit" onclick="editFaculty(${member.id})">
-                            <i class="fas fa-edit"></i> Edit
+                            <i class="fas fa-eye"></i> View
                         </button>
                         <button class="action-btn btn-delete" onclick="deleteFaculty(${member.id})">
                             <i class="fas fa-trash"></i> Delete
                         </button>
-                        <button class="action-btn btn-block" onclick="blockFaculty(${member.id})">
-                            <i class="fas fa-ban"></i> Block
+                        <button class="action-btn ${member.block_status == 1 ? 'btn-unblock' : 'btn-block'}" onclick="blockFaculty(${member.id}, ${member.block_status})">
+                            <i class="fas ${member.block_status == 1 ? 'fa-unlock' : 'fa-ban'}"></i> ${member.block_status == 1 ? 'Unblock' : 'Block'}
                         </button>
                     </div>
                 `;
@@ -1052,36 +1020,14 @@
             displayFaculty(filteredFaculty);
         }
 
-        let currentEditId = null;
-
         function editFaculty(id) {
-            const faculty = allFaculty.find(f => f.id == id);
-            if (!faculty) return;
-            
-            currentEditId = id;
-            
-            // Populate modal with faculty data
-            const initials = faculty.name.split(' ').map(n => n[0]).join('').toUpperCase();
-            document.getElementById('editAvatar').textContent = initials;
-            document.getElementById('editName').textContent = faculty.name;
-            document.getElementById('editFacultyId').textContent = 'ID: ' + faculty.faculty_id;
-            document.getElementById('editSubject').textContent = faculty.subject;
-            document.getElementById('editDob').textContent = faculty.dob ? new Date(faculty.dob).toLocaleDateString() : 'Not provided';
-            document.getElementById('editContactNumber').value = faculty.contact_number;
-            document.getElementById('editEmailField').value = faculty.email;
-            
-            // Show modal
-            document.getElementById('editModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-            currentEditId = null;
+            // Redirect to faculty profile page
+            window.location.href = 'php/faculty_profile.php?id=' + id;
         }
 
         let facultyToDelete = null;
+        let facultyToBlock = null;
+        let currentBlockStatus = null;
 
         function deleteFaculty(id) {
             facultyToDelete = id;
@@ -1119,9 +1065,71 @@
             }
         }
 
-        function blockFaculty(id) {
-            // Placeholder for block functionality
-            console.log('Block faculty:', id);
+        function blockFaculty(id, blockStatus) {
+            facultyToBlock = id;
+            currentBlockStatus = blockStatus;
+            
+            const modal = document.getElementById('blockModal');
+            const title = document.getElementById('blockModalTitle');
+            const icon = document.getElementById('blockModalIcon');
+            const text = document.getElementById('blockModalText');
+            const btnText = document.getElementById('blockBtnText');
+            const confirmBtn = document.getElementById('confirmBlockBtn');
+            
+            if (blockStatus == 1) {
+                title.textContent = 'Unblock Faculty';
+                icon.className = 'fas fa-unlock confirm-icon';
+                icon.style.color = 'var(--success)';
+                text.textContent = 'Are you sure you want to unblock this faculty member?';
+                btnText.textContent = 'Unblock';
+                confirmBtn.className = 'btn btn-primary';
+                confirmBtn.innerHTML = '<i class="fas fa-unlock"></i> <span id="blockBtnText">Unblock</span>';
+            } else {
+                title.textContent = 'Block Faculty';
+                icon.className = 'fas fa-user-slash confirm-icon';
+                icon.style.color = 'var(--danger)';
+                text.textContent = 'Are you sure you want to block this faculty member?';
+                btnText.textContent = 'Block';
+                confirmBtn.className = 'btn btn-danger';
+                confirmBtn.innerHTML = '<i class="fas fa-ban"></i> <span id="blockBtnText">Block</span>';
+            }
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBlockModal() {
+            document.getElementById('blockModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            facultyToBlock = null;
+            currentBlockStatus = null;
+        }
+
+        function confirmBlockAction() {
+            if (facultyToBlock !== null) {
+                const newStatus = currentBlockStatus == 1 ? 0 : 1;
+                
+                fetch('php/block_faculty.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'faculty_id=' + encodeURIComponent(facultyToBlock) + '&block_status=' + newStatus
+                })
+                .then(response => response.text())
+                .then(data => {
+                    if (data.trim() === 'success') {
+                        closeBlockModal();
+                        loadFaculty();
+                    } else {
+                        alert('Error: ' + data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Network error. Please try again.');
+                });
+            }
         }
 
         // Load faculty on page load

@@ -7,6 +7,11 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo "Invalid request method";
+    exit();
+}
+
 $user_id = $_SESSION['user_id'];
 $name = $_POST['name'] ?? '';
 $faculty_id = $_POST['faculty_id'] ?? '';
@@ -15,9 +20,17 @@ $contact_number = $_POST['contact_number'] ?? '';
 $email = $_POST['email'] ?? '';
 $subject = $_POST['subject'] ?? '';
 
+// Debug: Log received data
+error_log("Received data: name=$name, faculty_id=$faculty_id, contact=$contact_number, email=$email, subject=$subject");
+
 // Validate required fields
 if (empty($name) || empty($faculty_id) || empty($contact_number) || empty($email) || empty($subject)) {
-    echo "All required fields must be filled";
+    echo "All required fields must be filled. Missing: ";
+    if (empty($name)) echo "name ";
+    if (empty($faculty_id)) echo "faculty_id ";
+    if (empty($contact_number)) echo "contact ";
+    if (empty($email)) echo "email ";
+    if (empty($subject)) echo "subject ";
     exit();
 }
 

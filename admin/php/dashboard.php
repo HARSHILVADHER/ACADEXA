@@ -1485,6 +1485,8 @@ $conn->close();
     </div>
   </div>
 
+
+
   <script>
     // Load birthday count
     function loadBirthdayCount() {
@@ -1745,6 +1747,8 @@ $conn->close();
         console.error('Error:', error);
       });
     }
+
+
   </script>
 </body>
 </html>
