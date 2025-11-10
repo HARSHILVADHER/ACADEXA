@@ -350,6 +350,44 @@
             padding: 20px;
         }
 
+        .class-chart-section {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
+
+        .class-chart-section h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .class-chart-section .stats-grid {
+            margin-bottom: 15px;
+        }
+
+        .class-chart-section .stat-box {
+            padding: 15px;
+        }
+
+        .class-chart-section .stat-box h3 {
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .class-chart-section .stat-box p {
+            font-size: 1.5rem;
+        }
+
+        .class-chart-section .chart-container {
+            padding: 10px;
+            margin-top: 10px;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -573,6 +611,27 @@
                 </div>
             </div>
 
+            <div id="class-chart-section" class="class-chart-section" style="display:none;">
+                <h3>Fees Overview</h3>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <h3>Total Decided</h3>
+                        <p id="classDecided">₹0</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>Total Received</h3>
+                        <p id="classReceived">₹0</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>Total Pending</h3>
+                        <p id="classPending">₹0</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="classFeesChart" style="max-height: 250px;"></canvas>
+                </div>
+            </div>
+
             <div id="class-data" class="data-section" style="display:none;">
                 <div class="table-container">
                     <table id="class-table" class="report-table">
@@ -657,6 +716,7 @@
     <script>
         let studentData = [];
         let classData = [];
+        let classFeesChart = null;
 
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -750,19 +810,31 @@
                 const tbody = document.getElementById('class-tbody');
                 tbody.innerHTML = '';
                 
+                let totalDecided = 0;
+                let totalReceived = 0;
+                let totalPending = 0;
+                
                 if(data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No records found</td></tr>';
+                    document.getElementById('class-chart-section').style.display = 'none';
                 } else {
-                    let total = 0;
                     data.forEach(row => {
                         const statusClass = row.status === 'Paid' ? 'status-paid' : 'status-pending';
-                        total += parseFloat(row.amount);
+                        const amount = parseFloat(row.amount);
+                        totalDecided += amount;
+                        
+                        if(row.status === 'Paid') {
+                            totalReceived += amount;
+                        } else {
+                            totalPending += amount;
+                        }
+                        
                         tbody.innerHTML += `
                             <tr>
                                 <td>${row.student_name}</td>
                                 <td>${row.student_roll_no}</td>
                                 <td>${row.installment_no}</td>
-                                <td>₹${parseFloat(row.amount).toFixed(2)}</td>
+                                <td>₹${amount.toFixed(2)}</td>
                                 <td>${row.due_date}</td>
                                 <td><span class="${statusClass}">${row.status}</span></td>
                                 <td>${row.paid_date || '-'}</td>
@@ -773,10 +845,54 @@
                     tbody.innerHTML += `
                         <tr class="total-row">
                             <td colspan="3">Total:</td>
-                            <td>₹${total.toFixed(2)}</td>
+                            <td>₹${totalDecided.toFixed(2)}</td>
                             <td colspan="4"></td>
                         </tr>
                     `;
+                    
+                    // Update stats
+                    document.getElementById('classDecided').textContent = '₹' + totalDecided.toLocaleString('en-IN', {minimumFractionDigits: 2});
+                    document.getElementById('classReceived').textContent = '₹' + totalReceived.toLocaleString('en-IN', {minimumFractionDigits: 2});
+                    document.getElementById('classPending').textContent = '₹' + totalPending.toLocaleString('en-IN', {minimumFractionDigits: 2});
+                    
+                    // Create pie chart
+                    if(classFeesChart) classFeesChart.destroy();
+                    
+                    const ctx = document.getElementById('classFeesChart').getContext('2d');
+                    classFeesChart = new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Decided', 'Received', 'Pending'],
+                            datasets: [{
+                                data: [totalDecided, totalReceived, totalPending],
+                                backgroundColor: ['#4361ee', '#28a745', '#ffc107'],
+                                borderWidth: 3,
+                                borderColor: '#fff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 12,
+                                        font: { size: 12, weight: 'bold' }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.label + ': ₹' + parseFloat(context.parsed).toLocaleString('en-IN', {minimumFractionDigits: 2});
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    document.getElementById('class-chart-section').style.display = 'block';
                 }
                 document.getElementById('class-data').style.display = 'block';
             });

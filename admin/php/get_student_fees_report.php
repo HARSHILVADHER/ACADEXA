@@ -44,7 +44,7 @@ while ($row = $result->fetch_assoc()) {
         'student_roll_no' => $row['student_roll_no'] ?? 'N/A',
         'class_code' => $row['class_code'],
         'amount' => $row['amount'],
-        'due_date' => date('d-m-Y', strtotime($row['due_date'])),
+        'due_date' => $row['due_date'] ? date('d-m-Y', strtotime($row['due_date'])) : 'N/A',
         'paid_date' => date('d-m-Y', strtotime($row['paid_date'])),
         'payment_mode' => ucfirst($row['payment_mode'] ?? 'N/A')
     ];

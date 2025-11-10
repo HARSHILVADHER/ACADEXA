@@ -202,6 +202,11 @@
     .btn-secondary:hover {
       background: #059669;
     }
+    .btn-secondary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
     .modal-buttons {
       margin-top: 20px;
       display: flex;
@@ -262,7 +267,7 @@
           <input type="number" id="edit_passing_marks" required min="1">
         </div>
         <div class="modal-buttons">
-          <button type="button" class="btn-secondary" onclick="navigateToAddMarks()">Add Marks</button>
+          <button type="button" id="addMarksBtn" class="btn-secondary" onclick="navigateToAddMarks()">Add Marks</button>
           <button type="submit" class="btn-primary">Save Update</button>
         </div>
       </form>
@@ -355,7 +360,8 @@ function openEditModal(id, examName, className, classCode, examDate, startTime, 
     id: id,
     exam_name: examName,
     class_name: className,
-    class_code: classCode
+    class_code: classCode,
+    exam_date: examDate
   };
   
   document.getElementById('edit_exam_id').value = id;
@@ -367,6 +373,20 @@ function openEditModal(id, examName, className, classCode, examDate, startTime, 
   document.getElementById('edit_total_marks').value = totalMarks;
   document.getElementById('edit_passing_marks').value = passingMarks;
   
+  const today = new Date().toISOString().split('T')[0];
+  const addMarksBtn = document.getElementById('addMarksBtn');
+  
+  if (examDate < today) {
+    addMarksBtn.disabled = false;
+    addMarksBtn.title = 'Add marks for this exam';
+  } else if (examDate === today) {
+    addMarksBtn.disabled = false;
+    addMarksBtn.title = 'Add marks for this exam';
+  } else {
+    addMarksBtn.disabled = true;
+    addMarksBtn.title = 'Marks can only be added on or after the exam date';
+  }
+  
   document.getElementById('editModal').style.display = 'block';
 }
 
@@ -375,8 +395,16 @@ function closeEditModal() {
 }
 
 function navigateToAddMarks() {
+  const examDate = currentExamData.exam_date;
+  const today = new Date().toISOString().split('T')[0];
+  
+  if (examDate > today) {
+    alert('Marks can only be added on or after the exam date.');
+    return;
+  }
+  
   const examId = document.getElementById('edit_exam_id').value;
-  window.location.href = `add_marks.php?exam_id=${examId}`;
+  window.location.href = `php/add_marks.php?exam_id=${examId}`;
 }
 
 document.getElementById('editExamForm').addEventListener('submit', function(e) {

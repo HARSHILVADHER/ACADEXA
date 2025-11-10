@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'php/config.php';
+require_once 'config.php';
 
 $user_id = $_SESSION['user_id'] ?? null;
 if (!$user_id) {
@@ -215,17 +215,17 @@ $conn->close();
     <header>
         <div class="logo">Acadexa</div>
         <nav>
-            <a href="php/dashboard.php">Home</a>
-            <a href="createclass.html" class="active">Classes</a>
-            <a href="attendance.html">Attendance</a>
-            <a href="php/gradecard.php">Reports</a>
-            <a href="php/inquiry.php">Inquiries</a>
-            <a href="php/profile.php">Settings</a>
+            <a href="dashboard.php">Home</a>
+            <a href="../createclass.html" class="active">Classes</a>
+            <a href="../attendance.html">Attendance</a>
+            <a href="gradecard.php">Reports</a>
+            <a href="inquiry.php">Inquiries</a>
+            <a href="profile.php">Settings</a>
         </nav>
     </header>
     
     <div class="container">
-        <a href="all_exam.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Exams</a>
+        <a href="../all_exam.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Exams</a>
         
         <div class="exam-details">
             <h2><?php echo htmlspecialchars($exam['exam_name']); ?></h2>
@@ -318,7 +318,7 @@ $conn->close();
             
             const formData = new FormData(this);
             
-            fetch('php/save_marks.php', {
+            fetch('save_marks.php', {
                 method: 'POST',
                 body: formData
             })
@@ -339,17 +339,20 @@ $conn->close();
         // Download sample CSV
         function downloadSample() {
             const students = <?php echo json_encode($students); ?>;
-            let csv = 'Roll No,Student Name,Marks Obtained\n';
+            const className = '<?php echo addslashes($exam['class_name']); ?>';
+            const examName = '<?php echo addslashes($exam['exam_name']); ?>';
+            
+            let csv = 'student_roll_no,student_name,actual_marks\n';
             
             students.forEach(student => {
-                csv += `${student.roll_no},${student.name},0\n`;
+                csv += `${student.roll_no},${student.name},\n`;
             });
             
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'marks_sample_<?php echo preg_replace('/[^a-zA-Z0-9]/', '_', $exam['exam_name']); ?>.csv';
+            a.download = `${className}_${examName}_marks.csv`.replace(/[^a-zA-Z0-9_]/g, '_');
             a.click();
             window.URL.revokeObjectURL(url);
         }
@@ -367,7 +370,7 @@ $conn->close();
                 // Skip header
                 const dataLines = lines.slice(1).filter(line => line.trim());
                 
-                // Get current students order
+                // Get current students
                 const inputs = document.querySelectorAll('.marks-input');
                 const studentMap = new Map();
                 inputs.forEach(input => {
@@ -382,9 +385,11 @@ $conn->close();
                 
                 dataLines.forEach((line, index) => {
                     const parts = line.split(',').map(p => p.trim());
-                    if (parts.length < 3) return;
+                    if (parts.length < 2) return;
                     
-                    const [rollNo, name, marks] = parts;
+                    const rollNo = parts[0];
+                    const name = parts[1];
+                    const marks = parts[2] || '';
                     
                     if (!studentMap.has(rollNo)) {
                         errors.push(`Row ${index + 2}: Student with Roll No ${rollNo} not found`);
@@ -392,8 +397,8 @@ $conn->close();
                     }
                     
                     const student = studentMap.get(rollNo);
-                    if (student.studentName !== name) {
-                        errors.push(`Row ${index + 2}: Name mismatch for Roll No ${rollNo}. Expected: ${student.studentName}, Got: ${name}`);
+                    
+                    if (marks === '') {
                         return;
                     }
                     
@@ -413,7 +418,6 @@ $conn->close();
                     alert(`Successfully imported marks for ${imported} students!`);
                 }
                 
-                // Reset file input
                 event.target.value = '';
             };
             
