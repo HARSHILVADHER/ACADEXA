@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Management - Acadexa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-light: #e0e7ff;
+            --primary-dark: #3a0ca3;
+            --secondary: #3f37c9;
+            --accent: #f72585;
+            --dark: #1a1a1a;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --danger: #ef233c;
+            --white: #ffffff;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f5f7ff;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 40px;
+            background: var(--white);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+            background-clip: text;
+        }
+
+        nav {
+            display: flex;
+            gap: 15px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--gray);
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: var(--transition);
+            position: relative;
+            font-size: 0.95rem;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px;
+            transition: var(--transition);
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        nav a:hover::after {
+            width: 70%;
+        }
+
+        nav a.active {
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        nav a.active::after {
+            width: 70%;
+        }
+
+        .container {
+            padding: 30px 40px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .header-content h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .header-content p {
+            color: var(--gray);
+            font-size: 1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 1px solid var(--light-gray);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .add-faculty-btn {
+            background: var(--primary);
+            color: var(--white);
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--card-shadow);
+            font-size: 0.95rem;
+        }
+
+        .add-faculty-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-item {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            border-left: 4px solid var(--primary);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .faculty-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+        }
+
+        .faculty-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            border: 1px solid rgba(67, 97, 238, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .faculty-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+
+        .faculty-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .faculty-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .faculty-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-right: 15px;
+        }
+
+        .faculty-info h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .faculty-id {
+            color: var(--primary);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .faculty-details {
+            display: grid;
+            gap: 12px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+        }
+
+        .detail-item i {
+            width: 20px;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        .detail-item span {
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+
+        .faculty-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--light-gray);
+        }
+
+        .action-btn {
+            padding: 8px 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .btn-edit {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .btn-edit:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-delete {
+            background: rgba(239, 35, 60, 0.1);
+            color: var(--danger);
+        }
+
+        .btn-delete:hover {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-block {
+            background: rgba(248, 150, 30, 0.1);
+            color: var(--warning);
+        }
+
+        .btn-block:hover {
+            background: var(--warning);
+            color: var(--white);
+        }
+
+        .btn-unblock {
+            background: rgba(76, 201, 240, 0.1);
+            color: var(--success);
+        }
+
+        .btn-unblock:hover {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray);
+            grid-column: 1 / -1;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+            margin-bottom: 25px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: var(--white);
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--primary);
+            color: var(--white);
+            border-radius: 16px 16px 0 0;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .close {
+            color: var(--white);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close:hover {
+            opacity: 0.7;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--light-gray);
+            color: var(--dark);
+        }
+
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .confirm-modal {
+            max-width: 400px;
+        }
+
+        .confirm-modal .modal-header {
+            background: var(--danger);
+        }
+
+        .confirm-modal .modal-body {
+            text-align: center;
+            padding: 30px 25px;
+        }
+
+        .confirm-icon {
+            font-size: 3rem;
+            color: var(--danger);
+            margin-bottom: 20px;
+        }
+
+        .confirm-text {
+            font-size: 1.1rem;
+            color: var(--dark);
+            margin-bottom: 25px;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+
+        .profile-modal {
+            max-width: 500px;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-right: 20px;
+        }
+
+        .profile-info h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .profile-id {
+            color: var(--primary);
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .profile-details {
+            display: grid;
+            gap: 20px;
+        }
+
+        .profile-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-field label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--gray);
+            margin-bottom: 8px;
+        }
+
+        .profile-field .value {
+            font-size: 1rem;
+            color: var(--dark);
+            padding: 12px 15px;
+            background: var(--light);
+            border-radius: 8px;
+            border: 1px solid var(--light-gray);
+        }
+
+        .profile-field.editable .value {
+            background: var(--white);
+            border-color: var(--primary);
+        }
+
+        @media (max-width: 1200px) {
+            .faculty-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .faculty-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: 20px;
+                align-items: stretch;
+            }
+
+            .header-actions {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .stats-bar {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .faculty-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .stats-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .faculty-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .faculty-avatar {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Acadexa</div>
+        <nav>
+            <a href="php/dashboard.php">Home</a>
+            <a href="createclass.html">Classes</a>
+            <a href="attendance.html">Attendance</a>
+            <a href="php/gradecard.php">Reports</a>
+            <a href="php/inquiry.php">Inquiries</a>
+            <a href="php/profile.php">Profile</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <div class="header-content">
+                <h1>Faculty Management</h1>
+                <p>Manage your faculty members and their information</p>
+            </div>
+            <div class="header-actions">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search faculty..." onkeyup="searchFaculty()">
+                    <i class="fas fa-search"></i>
+                </div>
+                <button class="add-faculty-btn" onclick="openModal()">
+                    <i class="fas fa-plus"></i> Add Faculty
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number" id="totalFaculty">0</div>
+                <div class="stat-label">Total Faculty</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="activeSubjects">0</div>
+                <div class="stat-label">Subjects Taught</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="todayBirthdays">0</div>
+                <div class="stat-label">Birthdays Today</div>
+            </div>
+        </div>
+
+        <div class="faculty-grid" id="facultyGrid">
+            <!-- Faculty cards will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Add Faculty Modal -->
+    <div id="facultyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Faculty</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="facultyForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="name">Name *</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="faculty_id">Faculty ID *</label>
+                            <input type="text" id="faculty_id" name="faculty_id" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="dob">Date of Birth</label>
+                            <input type="date" id="dob" name="dob">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="contact_number">Contact Number *</label>
+                            <input type="tel" id="contact_number" name="contact_number" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email ID *</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="subject">Subject *</label>
+                            <input type="text" id="subject" name="subject" required>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Faculty
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content confirm-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Confirm Delete</h2>
+                <span class="close" onclick="closeConfirmModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <i class="fas fa-exclamation-triangle confirm-icon"></i>
+                <div class="confirm-text">Are you sure you want to delete this faculty member? This action cannot be undone.</div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Block Confirmation Modal -->
+    <div id="blockModal" class="modal">
+        <div class="modal-content confirm-modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="blockModalTitle">Block Faculty</h2>
+                <span class="close" onclick="closeBlockModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <i class="fas fa-user-slash confirm-icon" id="blockModalIcon"></i>
+                <div class="confirm-text" id="blockModalText">Are you sure you want to block this faculty member?</div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeBlockModal()">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmBlockBtn" onclick="confirmBlockAction()">
+                        <i class="fas fa-ban"></i> <span id="blockBtnText">Block</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal() {
+            document.getElementById('facultyModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('facultyModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            document.getElementById('facultyForm').reset();
+        }
+
+
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const facultyModal = document.getElementById('facultyModal');
+            const confirmModal = document.getElementById('confirmModal');
+            const blockModal = document.getElementById('blockModal');
+            
+            if (event.target == facultyModal) {
+                closeModal();
+            } else if (event.target == confirmModal) {
+                closeConfirmModal();
+            } else if (event.target == blockModal) {
+                closeBlockModal();
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('facultyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            // Validate required fields
+            const name = formData.get('name');
+            const faculty_id = formData.get('faculty_id');
+            const contact_number = formData.get('contact_number');
+            const email = formData.get('email');
+            const subject = formData.get('subject');
+            
+            if (!name || !faculty_id || !contact_number || !email || !subject) {
+                alert('Please fill all required fields');
+                return;
+            }
+            
+            fetch('php/add_faculty.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log('Server response:', data);
+                if (data.trim() === 'success') {
+                    alert('Faculty added successfully!');
+                    closeModal();
+                    loadFaculty();
+                } else {
+                    alert('Error: ' + data);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Network error. Please try again.');
+            });
+        });
+
+        let allFaculty = [];
+
+        // Load faculty data
+        function loadFaculty() {
+            fetch('php/get_faculty.php')
+                .then(response => response.json())
+                .then(faculty => {
+                    allFaculty = faculty;
+                    displayFaculty(faculty);
+                    updateStats(faculty);
+                })
+                .catch(error => {
+                    console.error('Error loading faculty:', error);
+                });
+        }
+
+        function displayFaculty(faculty) {
+            const grid = document.getElementById('facultyGrid');
+            grid.innerHTML = '';
+            
+            if (faculty.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <h3>No Faculty Members</h3>
+                        <p>Start building your team by adding your first faculty member</p>
+                        <button class="add-faculty-btn" onclick="openModal()">
+                            <i class="fas fa-plus"></i> Add First Faculty
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            faculty.forEach(member => {
+                const card = document.createElement('div');
+                card.className = 'faculty-card';
+                const initials = member.name.split(' ').map(n => n[0]).join('').toUpperCase();
+                
+                card.innerHTML = `
+                    <div class="faculty-header">
+                        <div class="faculty-avatar">${initials}</div>
+                        <div class="faculty-info">
+                            <h3>${member.name}</h3>
+                            <div class="faculty-id">ID: ${member.faculty_id}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="faculty-details">
+                        <div class="detail-item">
+                            <i class="fas fa-book"></i>
+                            <span>${member.subject}</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>${member.email}</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-phone"></i>
+                            <span>${member.contact_number}</span>
+                        </div>
+                        ${member.dob ? `
+                        <div class="detail-item">
+                            <i class="fas fa-birthday-cake"></i>
+                            <span>${new Date(member.dob).toLocaleDateString()}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="faculty-actions">
+                        <button class="action-btn btn-edit" onclick="editFaculty(${member.id})">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        <button class="action-btn btn-delete" onclick="deleteFaculty(${member.id})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                        <button class="action-btn ${member.block_status == 1 ? 'btn-unblock' : 'btn-block'}" onclick="blockFaculty(${member.id}, ${member.block_status})">
+                            <i class="fas ${member.block_status == 1 ? 'fa-unlock' : 'fa-ban'}"></i> ${member.block_status == 1 ? 'Unblock' : 'Block'}
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function updateStats(faculty) {
+            document.getElementById('totalFaculty').textContent = faculty.length;
+            
+            const uniqueSubjects = [...new Set(faculty.map(f => f.subject))].length;
+            document.getElementById('activeSubjects').textContent = uniqueSubjects;
+            
+            const today = new Date().toDateString();
+            const todayBirthdays = faculty.filter(f => {
+                if (!f.dob) return false;
+                const birthDate = new Date(f.dob);
+                const thisYear = new Date();
+                birthDate.setFullYear(thisYear.getFullYear());
+                return birthDate.toDateString() === today;
+            }).length;
+            document.getElementById('todayBirthdays').textContent = todayBirthdays;
+        }
+
+        function searchFaculty() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredFaculty = allFaculty.filter(member => 
+                member.name.toLowerCase().includes(searchTerm) ||
+                member.faculty_id.toLowerCase().includes(searchTerm) ||
+                member.subject.toLowerCase().includes(searchTerm) ||
+                member.email.toLowerCase().includes(searchTerm)
+            );
+            displayFaculty(filteredFaculty);
+        }
+
+        function editFaculty(id) {
+            // Redirect to faculty profile page
+            window.location.href = 'php/faculty_profile.php?id=' + id;
+        }
+
+        let facultyToDelete = null;
+        let facultyToBlock = null;
+        let currentBlockStatus = null;
+
+        function deleteFaculty(id) {
+            facultyToDelete = id;
+            document.getElementById('confirmModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            facultyToDelete = null;
+        }
+
+        function confirmDelete() {
+            if (facultyToDelete) {
+                fetch('php/delete_faculty.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'faculty_id=' + encodeURIComponent(facultyToDelete)
+                })
+                .then(response => response.text())
+                .then(data => {
+                    if (data.trim() === 'success') {
+                        closeConfirmModal();
+                        loadFaculty();
+                    } else {
+                        console.error('Delete error:', data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        }
+
+        function blockFaculty(id, blockStatus) {
+            facultyToBlock = id;
+            currentBlockStatus = blockStatus;
+            
+            const modal = document.getElementById('blockModal');
+            const title = document.getElementById('blockModalTitle');
+            const icon = document.getElementById('blockModalIcon');
+            const text = document.getElementById('blockModalText');
+            const btnText = document.getElementById('blockBtnText');
+            const confirmBtn = document.getElementById('confirmBlockBtn');
+            
+            if (blockStatus == 1) {
+                title.textContent = 'Unblock Faculty';
+                icon.className = 'fas fa-unlock confirm-icon';
+                icon.style.color = 'var(--success)';
+                text.textContent = 'Are you sure you want to unblock this faculty member?';
+                btnText.textContent = 'Unblock';
+                confirmBtn.className = 'btn btn-primary';
+                confirmBtn.innerHTML = '<i class="fas fa-unlock"></i> <span id="blockBtnText">Unblock</span>';
+            } else {
+                title.textContent = 'Block Faculty';
+                icon.className = 'fas fa-user-slash confirm-icon';
+                icon.style.color = 'var(--danger)';
+                text.textContent = 'Are you sure you want to block this faculty member?';
+                btnText.textContent = 'Block';
+                confirmBtn.className = 'btn btn-danger';
+                confirmBtn.innerHTML = '<i class="fas fa-ban"></i> <span id="blockBtnText">Block</span>';
+            }
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBlockModal() {
+            document.getElementById('blockModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            facultyToBlock = null;
+            currentBlockStatus = null;
+        }
+
+        function confirmBlockAction() {
+            if (facultyToBlock !== null) {
+                const newStatus = currentBlockStatus == 1 ? 0 : 1;
+                
+                fetch('php/block_faculty.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'faculty_id=' + encodeURIComponent(facultyToBlock) + '&block_status=' + newStatus
+                })
+                .then(response => response.text())
+                .then(data => {
+                    if (data.trim() === 'success') {
+                        closeBlockModal();
+                        loadFaculty();
+                    } else {
+                        alert('Error: ' + data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Network error. Please try again.');
+                });
+            }
+        }
+
+        // Load faculty on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFaculty();
+        });
+    </script>
+</body>
+</html>

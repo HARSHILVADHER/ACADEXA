@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bulk Report Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    body { background: #f8fafc; font-family: 'Inter', sans-serif; }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      padding: 32px 24px;
+      text-align: center;
+    }
+    .upload-area {
+      border: 2px dashed #2563eb;
+      border-radius: 12px;
+      padding: 40px 20px;
+      background: #f4fdf7;
+      margin-bottom: 24px;
+      position: relative;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .upload-area.dragover { border-color: #2563eb; }
+    .upload-area input[type="file"] { display: none; }
+    .upload-icon {
+      font-size: 2.5rem;
+      color: #2563eb;
+      margin-bottom: 10px;
+    }
+    .upload-btn {
+      margin-top: 18px;
+      padding: 10px 28px;
+      border-radius: 6px;
+      background: #fff;
+      color: #2563eb;
+      border: 2px solid #2563eb;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .upload-btn:hover {
+      background: #2563eb;
+      color: #fff;
+    }
+    .count-info {
+      margin: 18px 0 0 0;
+      font-size: 1.1rem;
+      color: #2563eb;
+      font-weight: 600;
+    }
+    #generateBtn {
+      margin-top: 24px;
+      padding: 10px 28px;
+      border-radius: 6px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: none;
+    }
+    .report-card {
+      margin: 40px auto 24px auto;
+      background: #f9fafb;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      padding: 28px 18px;
+      max-width: 600px;
+      text-align: left;
+    }
+    .report-card table {
+      width: 100%;
+      margin-bottom: 18px;
+      border-collapse: collapse;
+    }
+    .report-card th, .report-card td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+    }
+    .report-card th {
+      background: #e0e7ff;
+      color: #2563eb;
+    }
+    .report-title {
+      color: #2563eb;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      margin-bottom: 0;
+    }
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #2563eb;
+    }
+    nav {
+      display: flex;
+      gap: 20px;
+    }
+    nav a {
+      text-decoration: none;
+      color: #1a1a1a;
+      font-weight: 500;
+      padding: 5px 10px;
+      border-radius: 6px;
+      transition: background 0.3s;
+    }
+    nav a.active {
+      background: #e0e7ff;
+      color: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Acadexa</div>
+    <nav>
+      <a href="php/dashboard.php">Home</a>
+      <a href="createclass.html">Classes</a>
+      <a href="attendance.html">Attendance</a>
+      <a href="php/gradecard.php" class="active">Reports</a>
+      <a href="php/inquiry.php">Inquiries</a>
+      <a href="php/profile.php">Settings</a>
+    </nav>
+  </header>
+  <div class="container">
+    <div style="display:flex;justify-content:flex-start;">
+      <button id="downloadSampleBtn" style="margin-bottom:18px;padding:10px 22px;border-radius:6px;background:#22c55e;color:#fff;border:none;font-size:1rem;font-weight:600;cursor:pointer;">
+        Download Sample Excel Sheet
+      </button>
+    </div>
+    <div id="uploadArea" class="upload-area">
+      <div class="upload-icon">&#8682;</div>
+      <div style="font-size:1.1rem;font-weight:600;margin-bottom:8px;">Drop files here to upload</div>
+      <div style="color:#555;">You can upload <b>xlsx</b> files.<br>Files can't be larger than 10 MB.<br>You can upload only 1 file.</div>
+      <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Select files</button>
+      <input type="file" id="fileInput" accept=".xlsx,.xls" />
+    </div>
+    <div class="count-info" id="studentCount"></div>
+    <button id="generateBtn">Generate</button>
+    <button id="downloadAllBtn" style="margin-top:18px;display:none;padding:10px 28px;border-radius:6px;background:#2563eb;color:#fff;border:none;font-size:1.1rem;font-weight:600;cursor:pointer;">
+      Download All Reports as PDF
+    </button>
+    <div id="reports"></div>
+  </div>
+
+  <script>
+    let students = [];
+
+    // Drag and drop logic
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    uploadArea.addEventListener('dragover', e => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+    uploadArea.addEventListener('dragleave', e => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+    });
+    uploadArea.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        handleFile(e.dataTransfer.files[0]);
+      }
+    });
+    fileInput.addEventListener('change', e => {
+      if (e.target.files.length) {
+        handleFile(e.target.files[0]);
+      }
+    });
+
+    function handleFile(file) {
+      if (!file.name.match(/\.(xlsx|xls)$/i)) {
+        alert('Please upload an Excel file (.xlsx or .xls)');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10 MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, {type: 'array'});
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, {defval: ''});
+        students = json;
+        document.getElementById('studentCount').textContent = `Total students: ${students.length}`;
+        document.getElementById('generateBtn').style.display = students.length ? 'inline-block' : 'none';
+        document.getElementById('downloadAllBtn').style.display = 'inline-block';
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // Helper to convert Excel serial date to YYYY-MM-DD
+    function excelDateToJSDate(serial) {
+      if (!serial) return '';
+      if (typeof serial === 'string') return serial; // Already a string
+      const utc_days  = Math.floor(serial - 25569);
+      const utc_value = utc_days * 86400;                                        
+      const date_info = new Date(utc_value * 1000);
+      // Adjust for Excel's leap year bug
+      return date_info.getFullYear() + '-' + String(date_info.getMonth()+1).padStart(2,'0') + '-' + String(date_info.getDate()).padStart(2,'0');
+    }
+
+    // Generate reports for all students
+    document.getElementById('generateBtn').onclick = function() {
+      const reportsDiv = document.getElementById('reports');
+      reportsDiv.innerHTML = '';
+      students.forEach((stu, idx) => {
+        // Collect subjects and marks
+        let subjects = [];
+        let mcqs = [];
+        let theorys = [];
+        let marksRows = '';
+        // Dynamically find all subject columns
+        let i = 1;
+        while (stu[`Subject ${i}`]) {
+          subjects.push(stu[`Subject ${i}`]);
+          mcqs.push(Number(stu[`MCQ ${i}`]) || 0);
+          theorys.push(Number(stu[`Theory ${i}`]) || 0);
+          marksRows += `<tr>
+            <td>${stu[`Subject ${i}`]}</td>
+            <td>${stu[`MCQ ${i}`]}</td>
+            <td>${stu[`Theory ${i}`]}</td>
+          </tr>`;
+          i++;
+        }
+        // Build report card HTML
+        const reportId = `chart${idx}`;
+        let html = `
+          <div class="report-card">
+            <div class="report-title">Report Card</div>
+            <table>
+              <tr><th>Name</th><td>${stu.Name}</td></tr>
+              <tr><th>Std</th><td>${stu.Std}</td></tr>
+              <tr><th>Email</th><td>${stu.Email}</td></tr>
+              <tr><th>Date</th><td>${excelDateToJSDate(stu.Date)}</td></tr>
+            </table>
+            <table>
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>MCQ</th>
+                  <th>Theory</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${marksRows}
+              </tbody>
+            </table>
+            <canvas id="${reportId}" height="180"></canvas>
+          </div>
+        `;
+        reportsDiv.insertAdjacentHTML('beforeend', html);
+        // Draw chart
+        setTimeout(() => {
+          new Chart(document.getElementById(reportId).getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: subjects,
+              datasets: [
+                { label: 'MCQ', data: mcqs, backgroundColor: '#2563eb' },
+                { label: 'Theory', data: theorys, backgroundColor: '#22c55e' }
+              ]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'Marks Distribution' }
+              },
+              scales: { y: { beginAtZero: true } }
+            }
+          });
+        }, 100);
+      });
+    };
+
+    document.getElementById('downloadAllBtn').onclick = async function() {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('p', 'pt', 'a4');
+      const reportCards = document.querySelectorAll('.report-card');
+      if (reportCards.length === 0) {
+        alert("No reports to download!");
+        return;
+      }
+      for (let i = 0; i < reportCards.length; i++) {
+        const card = reportCards[i];
+        // Use html2canvas to capture the report card
+        const canvas = await html2canvas(card, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        // Calculate width/height for A4
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pageWidth - 40;
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 20, 20, pdfWidth, pdfHeight);
+      }
+      pdf.save('All_Student_Reports.pdf');
+    };
+
+    document.getElementById('downloadSampleBtn').onclick = function() {
+      // Sample data
+      const ws_data = [
+        ["Name", "Std", "Email", "Date", "Subject 1", "MCQ 1", "Theory 1", "Subject 2", "MCQ 2", "Theory 2"],
+        ["John Doe", "10", "john@email.com", "2024-05-01", "Math", "18", "22", "Science", "20", "25"],
+        ["Priya Patel", "9", "priya@email.com", "2024-05-01", "Math", "15", "20", "Science", "19", "23"]
+      ];
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(ws_data);
+      XLSX.utils.book_append_sheet(wb, ws, "Sample");
+      XLSX.writeFile(wb, "sample_students_report.xlsx");
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        
+        <!-- Floating Action Button -->
+        
+        <div class="fixed bottom-8 right-8 z-50">
+            <button class="w-14 h-14 rounded-full bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-xl flex items-center justify-center transform transition-all hover:scale-110 hover:shadow-2xl focus:outline-none pulse">
+                <i class="fas fa-plus text-xl"></i>
+            </button>
+        </div>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acadexa | Super Admin Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-blue: #0d47a1;
+            --secondary-blue: #1976d2;
+            --dark-blue: #0a2e5a;
+            --light-blue: #bbdefb;
+            --white: #ffffff;
+            --gray: #f8fafc;
+            --accent-blue: #2196f3;
+            --glass-effect: rgba(255, 255, 255, 0.15);
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--gray);
+            overflow-x: hidden;
+        }
+        
+        .sidebar {
+            width: 280px;
+            transform: translateX(0);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            background: linear-gradient(135deg, var(--glass-effect) 0%, rgba(13, 71, 161, 0.8) 100%);
+            box-shadow: 0 8px 32px 0 rgba(13, 71, 161, 0.2);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-collapsed {
+            transform: translateX(-240px);
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            transition: all 0.4s ease;
+        }
+        
+        .main-content-expanded {
+            margin-left: 40px;
+        }
+        
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-8px) rotateX(5deg);
+            box-shadow: 0 15px 35px rgba(13, 71, 161, 0.2);
+        }
+        
+        .card-hover::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-blue) 0%, var(--primary-blue) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .card-hover:hover::before {
+            opacity: 1;
+        }
+        
+        .nav-item {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--white);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-item:hover::after {
+            width: 100%;
+        }
+        
+        .pulse {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 15px rgba(33, 150, 243, 0);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            opacity: 0;
+        }
+        
+        @keyframes fadeIn {
+            0% { 
+                opacity: 0; 
+                transform: translateY(30px) scale(0.95); 
+            }
+            100% { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+        
+        .rotate {
+            transition: transform 0.3s ease;
+        }
+        
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
+        
+        .notification-badge {
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-10px);}
+            60% {transform: translateY(-5px);}
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="flex">
+        <!-- Sidebar -->
+        <div class="sidebar fixed h-screen gradient-bg text-white shadow-lg z-10">
+            <div class="flex items-center justify-between p-6 border-b border-blue-300">
+                <div class="flex items-center space-x-3">
+                    
+                    <h1 style="font-size: 30px;" class="text-xl font-bold">Acadexa</h1>
+                </div>
+                <button id="toggleSidebar" class="text-white focus:outline-none">
+                    <i class="fas fa-chevron-left rotate"></i>
+                </button>
+            </div>
+            
+            <div class="p-4">
+                <div class="flex items-center space-x-3 p-3 bg-blue-700 rounded-lg mb-6">
+                    <div class="relative">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Admin" class="w-10 h-10 rounded-full border-2 border-white">
+                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-blue-700"></span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold">Super Admin</h3>
+                        <p class="text-xs text-blue-200">Acadexa.official@gmail.com</p>
+                    </div>
+                </div>
+                
+                <nav>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="#" class="nav-item flex items-center space-x-3 p-3 rounded-lg bg-blue-700 text-white">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="user.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-600 text-white">
+                                <i class="fas fa-users"></i>
+                                <span>User Management</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-600 text-white">
+                                <i class="fas fa-user-shield"></i>
+                                <span>Roles & Permissions</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-600 text-white">
+                                <i class="fas fa-server"></i>
+                                <span>System Settings</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-600 text-white">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Analytics</span>
+                            </a>
+                        </li>
+                        
+                       
+                    </ul>
+                </nav>
+            </div>
+            
+            <div class="absolute bottom-0 w-full p-4 border-t border-blue-300">
+                <a href="../admin/login.html" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-600 text-white">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content w-full">
+            <!-- Top Navigation -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between p-4">
+                    <div class="flex items-center space-x-4">
+                        <h2 class="text-xl font-bold text-gray-800">Dashboard Overview</h2>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Dashboard Content -->
+            <main class="p-6">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover fade-in" style="animation-delay: 0.1s;">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                                    <i class="fas fa-users text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm">Total Users</p>
+                                    <h3 class="text-2xl font-bold text-gray-800">2,453</h3>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex items-center text-sm text-green-500">
+                                <i class="fas fa-arrow-up mr-1"></i>
+                                <span>12.5% increase</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover fade-in" style="animation-delay: 0.2s;">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                                    <i class="fas fa-user-shield text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm">Admins</p>
+                                    <h3 class="text-2xl font-bold text-gray-800">24</h3>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex items-center text-sm text-green-500">
+                                <i class="fas fa-arrow-up mr-1"></i>
+                                <span>2 new admins</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover fade-in" style="animation-delay: 0.3s;">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                                    <i class="fas fa-lock text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm">Active Sessions</p>
+                                    <h3 class="text-2xl font-bold text-gray-800">1,284</h3>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex items-center text-sm text-red-500">
+                                <i class="fas fa-arrow-down mr-1"></i>
+                                <span>3.2% decrease</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover fade-in pulse" style="animation-delay: 0.4s;">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                                    <i class="fas fa-exclamation-triangle text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm">Alerts</p>
+                                    <h3 class="text-2xl font-bold text-gray-800">5</h3>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <a href="#" class="text-sm text-blue-600 hover:underline">View alerts</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover fade-in" style="animation-delay: 0.5s;">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800">User Activity</h3>
+                                <div class="flex space-x-2">
+                                    <button class="px-3 py-1 text-xs bg-blue-100 text-blue-600 rounded-full">Daily</button>
+                                    <button class="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">Weekly</button>
+                                    <button class="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">Monthly</button>
+                                </div>
+                            </div>
+                            <div class="h-64">
+                                <!-- Chart placeholder - would be replaced with actual chart library -->
+                                <div class="w-full h-full flex items-center justify-center bg-gray-50 rounded-lg">
+                                    <p class="text-gray-400">User activity chart will appear here</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover fade-in" style="animation-delay: 0.6s;">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800">System Health</h3>
+                                <span class="px-3 py-1 text-xs bg-green-100 text-green-600 rounded-full">All Systems Operational</span>
+                            </div>
+                            <div class="h-64">
+                                <!-- Chart placeholder - would be replaced with actual chart library -->
+                                <div class="w-full h-full flex items-center justify-center bg-gray-50 rounded-lg">
+                                    <p class="text-gray-400">System health chart will appear here</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover fade-in" style="animation-delay: 0.7s;">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800">Recent Activity</h3>
+                            <a href="#" class="text-sm text-blue-600 hover:underline">View All</a>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <div class="p-2 bg-blue-100 text-blue-600 rounded-full mr-4">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-800">New user registered</p>
+                                    <p class="text-xs text-gray-500">John Doe (john@example.com) just registered</p>
+                                    <p class="text-xs text-gray-400 mt-1">2 minutes ago</p>
+                                </div>
+                                <button class="text-gray-400 hover:text-blue-600">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="p-2 bg-green-100 text-green-600 rounded-full mr-4">
+                                    <i class="fas fa-key"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-800">Password changed</p>
+                                    <p class="text-xs text-gray-500">Admin (admin@nexus.com) changed their password</p>
+                                    <p class="text-xs text-gray-400 mt-1">15 minutes ago</p>
+                                </div>
+                                <button class="text-gray-400 hover:text-blue-600">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="p-2 bg-yellow-100 text-yellow-600 rounded-full mr-4">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-800">Failed login attempt</p>
+                                    <p class="text-xs text-gray-500">5 failed attempts from IP: 192.168.1.45</p>
+                                    <p class="text-xs text-gray-400 mt-1">1 hour ago</p>
+                                </div>
+                                <button class="text-gray-400 hover:text-blue-600">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="p-2 bg-purple-100 text-purple-600 rounded-full mr-4">
+                                    <i class="fas fa-cog"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-800">System update</p>
+                                    <p class="text-xs text-gray-500">System updated to version 2.3.1</p>
+                                    <p class="text-xs text-gray-400 mt-1">3 hours ago</p>
+                                </div>
+                                <button class="text-gray-400 hover:text-blue-600">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Toggle sidebar
+        const toggleSidebar = document.getElementById('toggleSidebar');
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        
+        toggleSidebar.addEventListener('click', () => {
+            sidebar.classList.toggle('sidebar-collapsed');
+            mainContent.classList.toggle('main-content-expanded');
+            toggleSidebar.querySelector('i').classList.toggle('rotate-180');
+        });
+        
+        // Toggle user menu
+        const userMenuButton = document.getElementById('userMenuButton');
+        const userMenu = document.getElementById('userMenu');
+        
+        userMenuButton.addEventListener('click', () => {
+            userMenu.classList.toggle('hidden');
+        });
+        
+        // Close user menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!userMenuButton.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+        
+        // Add animation delays to cards
+        document.querySelectorAll('.fade-in').forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.1}s`;
+        });
+        
+        // Simulate loading
+        setTimeout(() => {
+            document.querySelectorAll('.fade-in').forEach(card => {
+                card.style.opacity = '1';
+            });
+        }, 100);
+    </script>
+</body>
+</html>

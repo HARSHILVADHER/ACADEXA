@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Celebrations - ACADEXA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-light: #e0e7ff;
+            --primary-dark: #3a0ca3;
+            --secondary: #3f37c9;
+            --accent: #f72585;
+            --dark: #1a1a1a;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --danger: #ef233c;
+            --white: #ffffff;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f5f7ff;
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Floating Birthday Elements */
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .floating-emoji {
+            position: absolute;
+            font-size: 2em;
+            animation: float 6s ease-in-out infinite;
+            opacity: 0.7;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        /* Header */
+        .top-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 40px;
+            background: var(--white);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .home-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .home-btn:hover {
+            background: var(--primary);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 40px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Header Section */
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(67, 97, 238, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--warning));
+        }
+
+        .page-header h1 {
+            font-size: 2.8em;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--warning));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .page-header p {
+            color: var(--gray);
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .birthday-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9em;
+        }
+
+        /* Sections Grid */
+        .sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(67, 97, 238, 0.1);
+            transition: var(--transition);
+        }
+
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 700;
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        /* Birthday Cards */
+        .birthday-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .birthday-card {
+            background: linear-gradient(135deg, var(--accent), var(--warning));
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .birthday-card::before {
+            content: '🎉';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 4em;
+            opacity: 0.2;
+        }
+
+        .birthday-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .card-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .person-info h3 {
+            font-size: 1.4em;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .person-info p {
+            opacity: 0.9;
+            font-size: 1em;
+        }
+
+        .person-info .birthday-date {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        /* Greet Button */
+        .greet-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            min-width: 140px;
+            justify-content: center;
+        }
+
+        .greet-btn:hover {
+            background: white;
+            color: var(--accent);
+            transform: scale(1.08);
+            box-shadow: 0 4px 15px rgba(255,255,255,0.3);
+        }
+
+        .greet-btn:disabled {
+            background: var(--gray);
+            border-color: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Empty State */
+        .no-birthdays {
+            text-align: center;
+            color: var(--gray);
+            font-style: italic;
+            padding: 50px;
+            background: var(--light);
+            border-radius: 15px;
+            border: 2px dashed var(--light-gray);
+        }
+
+        .no-birthdays i {
+            font-size: 3em;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .top-header {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .sections {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header h1 {
+                font-size: 2.2em;
+            }
+
+            .birthday-stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .card-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+
+        /* Animation Classes */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+    <!-- Floating Birthday Elements -->
+    <div class="floating-elements">
+        <div class="floating-emoji" style="top: 10%; left: 10%;">🎂</div>
+        <div class="floating-emoji" style="top: 20%; right: 15%;">🎈</div>
+        <div class="floating-emoji" style="top: 60%; left: 5%;">🎉</div>
+        <div class="floating-emoji" style="top: 70%; right: 10%;">🎁</div>
+        <div class="floating-emoji" style="top: 40%; left: 80%;">🎊</div>
+        <div class="floating-emoji" style="top: 80%; left: 70%;">🍰</div>
+        <div class="floating-emoji" style="top: 30%; right: 5%;">🎵</div>
+        <div class="floating-emoji" style="top: 85%; left: 15%;">🌟</div>
+    </div>
+
+    <!-- Header -->
+    <div class="top-header">
+        <div class="logo">Acadexa</div>
+        <a href="php/dashboard.php" class="home-btn">
+            <i class="fas fa-home"></i>
+            Home
+        </a>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header animate-fade">
+            <h1>🎉 Birthday Celebrations 🎂</h1>
+            <p>Celebrating special moments with your students and faculty!</p>
+            <div class="birthday-stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="studentBirthdayCount">0</div>
+                    <div class="stat-label">Students</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="facultyBirthdayCount">0</div>
+                    <div class="stat-label">Faculty</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Birthday Sections -->
+        <div class="sections">
+            <div class="section animate-fade delay-1">
+                <h2 class="section-title">
+                    <i class="fas fa-graduation-cap"></i>
+                    Your Students' Birthdays
+                </h2>
+                <div id="student-birthdays" class="birthday-cards">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Loading student birthdays...
+                    </div>
+                </div>
+            </div>
+
+            <div class="section animate-fade delay-2">
+                <h2 class="section-title">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    Your Faculty's Birthdays
+                </h2>
+                <div id="faculty-birthdays" class="birthday-cards">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Loading faculty birthdays...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication and load birthdays on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+        });
+        
+        async function checkAuthentication() {
+            try {
+                const response = await fetch('php/check_session.php');
+                const data = await response.json();
+                
+                if (!data.authenticated) {
+                    window.location.href = 'php/login.php';
+                    return;
+                }
+                
+                loadBirthdays();
+            } catch (error) {
+                console.error('Authentication check failed:', error);
+                window.location.href = 'php/login.php';
+            }
+        }
+
+        async function loadBirthdays() {
+            try {
+                const response = await fetch('php/get_birthdays.php');
+                const data = await response.json();
+                
+                displayBirthdays('student-birthdays', data.students || [], 'student');
+                displayBirthdays('faculty-birthdays', data.faculty || [], 'faculty');
+                
+                // Update stats
+                document.getElementById('studentBirthdayCount').textContent = (data.students || []).length;
+                document.getElementById('facultyBirthdayCount').textContent = (data.faculty || []).length;
+                
+            } catch (error) {
+                console.error('Error loading birthdays:', error);
+                document.getElementById('student-birthdays').innerHTML = '<div class="no-birthdays"><i class="fas fa-exclamation-triangle"></i><br>Error loading birthdays</div>';
+                document.getElementById('faculty-birthdays').innerHTML = '<div class="no-birthdays"><i class="fas fa-exclamation-triangle"></i><br>Error loading birthdays</div>';
+            }
+        }
+
+        function displayBirthdays(containerId, birthdays, type) {
+            const container = document.getElementById(containerId);
+            
+            if (birthdays.length === 0) {
+                container.innerHTML = `
+                    <div class="no-birthdays">
+                        <i class="fas fa-birthday-cake"></i>
+                        <br>No birthdays today!
+                        <br><small>Check back tomorrow for more celebrations</small>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = birthdays.map(person => `
+                <div class="birthday-card">
+                    <div class="card-content">
+                        <div class="person-info">
+                            <h3>🎂 ${person.name}</h3>
+                            <p>📧 ${person.email}</p>
+                            <div class="birthday-date">🎈 Birthday: ${formatDate(person.dob)}</div>
+                        </div>
+                        <button class="greet-btn" onclick="sendBirthdayGreeting('${person.email}', '${person.name}', '${type}', this)">
+                            <i class="fas fa-heart"></i>
+                            Send Greetings
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+
+        async function sendBirthdayGreeting(email, name, type, button) {
+            const originalText = button.innerHTML;
+            
+            try {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+                
+                const response = await fetch('php/send_birthday_greeting.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: email, 
+                        name: name, 
+                        type: type 
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    button.innerHTML = '<i class="fas fa-check"></i> Sent!';
+                    button.style.background = 'rgba(76, 201, 240, 0.3)';
+                    
+                    setTimeout(() => {
+                        button.innerHTML = '<i class="fas fa-heart"></i> Sent';
+                        button.disabled = true;
+                        button.style.opacity = '0.7';
+                    }, 2000);
+                } else {
+                    throw new Error(result.message || 'Failed to send greeting');
+                }
+            } catch (error) {
+                console.error('Error sending greeting:', error);
+                alert('❌ Failed to send birthday greeting: ' + error.message);
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

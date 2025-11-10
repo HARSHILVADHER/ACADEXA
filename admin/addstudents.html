@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Student - Acadexa</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-light: #e0e7ff;
+      --primary-dark: #3a0ca3;
+      --secondary: #3f37c9;
+      --accent: #f72585;
+      --dark: #1a1a1a;
+      --light: #f8f9fa;
+      --gray: #6c757d;
+      --light-gray: #e9ecef;
+      --success: #4cc9f0;
+      --warning: #f8961e;
+      --danger: #ef233c;
+      --white: #ffffff;
+      --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+    body {
+      background-color: #f5f7ff;
+      color: var(--dark);
+      line-height: 1.6;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 40px;
+      background: var(--white);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+      background-clip: text;
+    }
+    nav {
+      display: flex;
+      gap: 15px;
+    }
+    nav a {
+      text-decoration: none;
+      color: var(--gray);
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: var(--transition);
+      position: relative;
+      font-size: 0.95rem;
+    }
+    nav a:hover {
+      color: var(--primary);
+    }
+    nav a.active {
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+    .container {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .main-layout {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 2rem;
+    }
+    .students-panel {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: var(--card-shadow);
+      padding: 1.5rem;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .student-card {
+      background: linear-gradient(135deg, #f8f9ff 0%, #e8f0ff 100%);
+      border: 1px solid var(--light-gray);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+    .student-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--card-shadow-hover);
+      border-color: var(--primary);
+    }
+    .student-name {
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 0.25rem;
+    }
+    .student-details {
+      font-size: 0.85rem;
+      color: var(--gray);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .student-badge {
+      background: var(--primary);
+      color: var(--white);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .student-badge:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--gray);
+    }
+    .students-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--light-gray);
+    }
+    .student-count {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .card {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: var(--card-shadow);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    .card h2 {
+      color: var(--primary-dark);
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    .form-group label {
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--dark);
+    }
+    .form-group input,
+    .form-group select {
+      padding: 0.75rem;
+      border: 2px solid var(--light-gray);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: var(--white);
+    }
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+    .btn-secondary {
+      background: var(--secondary);
+      color: var(--white);
+    }
+    .btn-secondary:hover {
+      background: #2d2a8a;
+      transform: translateY(-2px);
+    }
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+    }
+    .file-input {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    .hidden {
+      display: none;
+    }
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    .alert-success {
+      background: #d1f2eb;
+      color: #0c5460;
+      border: 1px solid #b8e6d3;
+    }
+    .alert-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    @media (max-width: 768px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .btn-group {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Acadexa</div>
+    <nav>
+      <a href="php/dashboard.php">Home</a>
+      <a href="createclass.html">Classes</a>
+      <a href="students.html" class="active">Students</a>
+      <a href="attendance.html">Attendance</a>
+      <a href="php/gradecard.php">Reports</a>
+      <a href="php/inquiry.php">Inquiries</a>
+      <a href="php/profile.php">Profile</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="main-layout">
+      <!-- Students List Panel -->
+      <div class="students-panel">
+        <div class="students-header">
+          <h3><i class="fas fa-users"></i> Class Students</h3>
+          <span class="student-count" id="studentCount">0 Students</span>
+        </div>
+        <div id="studentsList">
+          <div class="empty-state">
+            <i class="fas fa-user-graduate" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+            <p>Select a class to view students</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Student Form -->
+      <div class="card">
+        <h2 id="pageTitle"><i class="fas fa-user-plus"></i> Add Student</h2>
+        
+        <div id="alert-container"></div>
+      
+      <form id="studentForm">
+        <div class="form-grid">
+          <!-- Move Class Code field to the top -->
+          <div class="form-group">
+            <label for="classCode">Class Code *</label>
+            <select id="classCode" name="classCode" required>
+              <option value="">Select Class</option>
+            </select>
+            <!-- hidden field will be created dynamically if we lock the select (so value is submitted) -->
+          </div>
+
+          <div class="form-group">
+            <label for="name">Name *</label>
+            <input type="text" id="name" name="name" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="dob">Date of Birth *</label>
+            <input type="date" id="dob" name="dob" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="medium">Medium *</label>
+            <select id="medium" name="medium" required>
+              <option value="">Select Medium</option>
+              <option value="English">English</option>
+              <option value="Hindi">Gujarati</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="roll_no">Roll No *</label>
+            <input type="text" id="roll_no" name="roll_no" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="std">Standard *</label>
+            <select id="std" name="std" required onchange="toggleGroupField()">
+              <option value="">Select Standard</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+              <option value="11">11</option>
+              <option value="12">12</option>
+            </select>
+          </div>
+          
+          <div class="form-group hidden" id="group-field">
+            <label for="group_name">Group</label>
+            <select id="group_name" name="group_name">
+              <option value="">Select Group</option>
+              <option value="A Group">A Group</option>
+              <option value="B Group">B Group</option>
+              <option value="Commerce">Commerce</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="parent_contact">Parent Contact *</label>
+            <input type="tel" id="parent_contact" name="parent_contact" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="student_contact">Student Contact</label>
+            <input type="tel" id="student_contact" name="student_contact">
+          </div>
+          
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required>
+          </div>
+        </div>
+        
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Student
+          </button>
+          
+          <button type="button" class="btn btn-secondary" onclick="document.getElementById('csvFile').click()">
+            <i class="fas fa-upload"></i> Import Students
+          </button>
+          <input type="file" id="csvFile" style="display: none;" accept=".csv" onchange="importCSV()">
+          
+          <button type="button" class="btn btn-secondary" onclick="downloadSampleCSV()">
+            <i class="fas fa-download"></i> Download Sample CSV
+          </button>
+        </div>
+      </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // read classCode from query string
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    // Load classes for dropdown (returns Promise with classes array)
+    function loadClasses() {
+      return fetch('php/get_classes_universal.php')
+        .then(response => response.json())
+        .then(result => {
+          if (result.success && Array.isArray(result.data)) {
+            const classes = result.data;
+            const select = document.getElementById('classCode');
+            // clear existing except default
+            select.innerHTML = '<option value="">Select Class</option>';
+            classes.forEach(cls => {
+              const option = document.createElement('option');
+              option.value = cls.code;
+              // show readable name + code so user can see both
+              option.textContent = `${cls.name} (${cls.code})`;
+              // store name for later lookup
+              option.dataset.name = cls.name;
+              select.appendChild(option);
+            });
+            
+            // Add event listener for class selection
+            select.addEventListener('change', function() {
+              loadStudentsByClass(this.value);
+            });
+            
+            return classes;
+          } else {
+            console.error('Classes response error:', result.message || 'Invalid data format');
+            return [];
+          }
+        })
+        .catch(error => {
+          console.error('Error loading classes:', error);
+          return [];
+        });
+    }
+
+    // Load students by class code
+    function loadStudentsByClass(classCode) {
+      const studentsList = document.getElementById('studentsList');
+      const studentCount = document.getElementById('studentCount');
+      
+      if (!classCode) {
+        studentsList.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-user-graduate" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+            <p>Select a class to view students</p>
+          </div>`;
+        studentCount.textContent = '0 Students';
+        return;
+      }
+      
+      fetch(`php/get_students_by_class.php?classCode=${encodeURIComponent(classCode)}&t=${Date.now()}`)
+        .then(response => response.json())
+        .then(students => {
+          console.log('Students loaded for class', classCode, ':', students);
+          if (students.length === 0) {
+            studentsList.innerHTML = `
+              <div class="empty-state">
+                <i class="fas fa-user-plus" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <p>No students in this class yet</p>
+                <small>Add the first student using the form</small>
+              </div>`;
+            studentCount.textContent = '0 Students';
+          } else {
+            studentsList.innerHTML = students.map(student => `
+              <div class="student-card">
+                <div class="student-name">${student.name}</div>
+                <div class="student-details">
+                  <span>Roll: ${student.roll_no} | Std: ${student.std}${student.group_name ? ' (' + student.group_name + ')' : ''}</span>
+                  <button class="student-badge" onclick="editStudent(${student.id})">View</button>
+                </div>
+              </div>
+            `).join('');
+            studentCount.textContent = `${students.length} Student${students.length !== 1 ? 's' : ''}`;
+          }
+        })
+        .catch(error => {
+          console.error('Error loading students:', error);
+          studentsList.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem; color: var(--danger);"></i>
+              <p>Error loading students</p>
+            </div>`;
+        });
+    }
+
+    // View student profile
+    function editStudent(studentId) {
+      window.location.href = `php/student_profile.php?id=${studentId}`;
+    }
+
+    // Toggle group field based on standard selection
+    function toggleGroupField() {
+      const std = document.getElementById('std').value;
+      const groupField = document.getElementById('group-field');
+      const groupSelect = document.getElementById('group_name');
+      
+      if (std === '11' || std === '12') {
+        groupField.classList.remove('hidden');
+        groupSelect.required = true;
+      } else {
+        groupField.classList.add('hidden');
+        groupSelect.required = false;
+        groupSelect.value = ''; // Clear the value when hidden
+      }
+    }
+
+    // Show alert message
+    function showAlert(message, type) {
+      const container = document.getElementById('alert-container');
+      container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 5000);
+    }
+
+    // Handle form submission
+    document.getElementById('studentForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const form = this;
+      const formData = new FormData(form);
+
+      // Ensure group_name is always sent, even when field is hidden
+      const groupEl = document.getElementById('group_name');
+      const groupValue = groupEl ? groupEl.value : '';
+      formData.set('group_name', groupValue);
+      
+      // Debug: Log form data
+      console.log('Form data being sent:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key + ': ' + value);
+      }
+
+      fetch('php/add_student.php', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          showAlert('Student added successfully!', 'success');
+          const classCode = document.getElementById('classCode').value;
+          this.reset();
+          toggleGroupField(); // Reset group field visibility
+          // Reload students list
+          if (classCode) {
+            document.getElementById('classCode').value = classCode;
+            loadStudentsByClass(classCode);
+          }
+          // if class select was locked via URL param, restore the locked hidden input
+          applyUrlClassIfAny(); 
+        } else {
+          showAlert(data.message || 'Error adding student', 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showAlert('Error adding student', 'error');
+      });
+    });
+
+    // Import CSV functionality
+    function importCSV() {
+      const fileInput = document.getElementById('csvFile');
+      const file = fileInput.files[0];
+      const classCode = document.getElementById('classCode').value;
+      
+      if (!file) return;
+      
+      if (!classCode) {
+        showAlert('Please select a class first', 'error');
+        fileInput.value = '';
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('csvFile', file);
+      formData.append('classCode', classCode);
+      
+      showAlert('Importing students...', 'success');
+      
+      fetch('php/import_students.php', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Import response:', data);
+        if (data.status === 'success') {
+          showAlert(`Successfully imported ${data.count} students!`, 'success');
+          // Force refresh the students list after a short delay
+          setTimeout(() => {
+            loadStudentsByClass(classCode);
+          }, 500);
+        } else {
+          showAlert(data.message || 'Error importing students', 'error');
+        }
+        fileInput.value = '';
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showAlert('Error importing students', 'error');
+        fileInput.value = '';
+      });
+    }
+
+    // Download sample CSV
+    function downloadSampleCSV() {
+      window.location.href = 'php/download_sample_csv.php';
+    }
+
+    // If page opened with ?classCode=..., preselect that class, show class name in heading,
+    // and lock the select so users add to the intended class only.
+    function applyUrlClassIfAny() {
+      const urlCode = getQueryParam('classCode');
+      if (!urlCode) return;
+      const select = document.getElementById('classCode');
+
+      // try to set value; when classes are loaded, the option will exist
+      if (Array.from(select.options).some(o => o.value === urlCode)) {
+        select.value = urlCode;
+        // find the selected option to get class name
+        const selected = select.querySelector(`option[value="${CSS.escape(urlCode)}"]`);
+        const clsName = selected ? selected.dataset.name : '';
+        // update heading
+        const title = document.getElementById('pageTitle');
+        if (clsName) {
+          title.textContent = '';
+          const icon = document.createElement('i');
+          icon.className = 'fas fa-user-plus';
+          title.appendChild(icon);
+          title.insertAdjacentText('beforeend', ` Add Student — ${clsName} (${urlCode})`);
+        } else {
+          title.insertAdjacentText('beforeend', ` — ${urlCode}`);
+        }
+        // lock the select to prevent changing (but disabled fields are not submitted)
+        select.disabled = true;
+        // create or update hidden input so value is submitted
+        let hidden = document.getElementById('classCodeHidden');
+        if (!hidden) {
+          hidden = document.createElement('input');
+          hidden.type = 'hidden';
+          hidden.id = 'classCodeHidden';
+          hidden.name = 'classCode';
+          document.getElementById('studentForm').appendChild(hidden);
+        }
+        hidden.value = urlCode;
+        // Load students for this class
+        loadStudentsByClass(urlCode);
+      } else {
+        // if class not found yet, leave it — loadClasses will call this again after fetch
+      }
+    }
+
+    // Load classes on page load and apply URL class if provided
+    document.addEventListener('DOMContentLoaded', function() {
+      loadClasses().then(() => {
+        applyUrlClassIfAny();
+      });
+    });
+
+  </script>
+</body>
+</html>
