@@ -1,9 +1,10 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+require_once 'config.php';
+
 // Handle AJAX request for student info
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'studentinfo' && isset($_GET['id'])) {
     header('Content-Type: application/json');
-    require_once 'config.php';
-    session_start();
 
     $user_id = $_SESSION['user_id'] ?? null;
     if (!$user_id) {
@@ -583,7 +584,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'studentinfo' && isset($_GET['id']
 </head>
 <body>
   <header>
-    <div class="logo">Acadexa</div>
+    <?php include 'header_logo.php'; ?>
     <nav>
       <a href="dashboard.php">Home</a>
       <a href="../createclass.html">Classes</a>

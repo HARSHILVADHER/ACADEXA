@@ -173,7 +173,7 @@ if (!isset($_SESSION['user_id'])) {
 </head>
 <body>
   <header>
-    <div class="logo">Acadexa</div>
+    <?php require_once 'config.php'; include 'header_logo.php'; ?>
     <nav>
       <a href="dashboard.php">Home</a>
       <a href="createclass.html" class="active">Classes</a>

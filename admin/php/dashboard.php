@@ -1,6 +1,6 @@
 <?php
-require_once 'config.php';
 session_start();
+require_once 'config.php';
 
 $user_id = $_SESSION['user_id'] ?? null;
 if (!$user_id) {
@@ -249,7 +249,8 @@ if ($stmt) {
     $stmt->close();
 }
 
-$conn->close();
+// Don't close connection here - needed by header_logo.php
+// $conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -1200,7 +1201,7 @@ $conn->close();
 
 <body>
   <header>
-    <div class="logo">Acadexa</div>
+    <?php include 'header_logo.php'; ?>
     <nav>
       <a href="dashboard.php" class="active">Home</a>
       <a href="../createclass.html">Classes</a>

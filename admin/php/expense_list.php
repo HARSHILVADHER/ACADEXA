@@ -14,10 +14,22 @@ if (!isset($_SESSION['income_access']) || !$_SESSION['income_access']) {
 
 $user_id = $_SESSION['user_id'];
 
-$stmt = $conn->prepare("SELECT date, source, description, category, payment_method, amount FROM income WHERE user_id = ? ORDER BY date DESC");
+$conn->query("CREATE TABLE IF NOT EXISTS expenses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    expense_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    category VARCHAR(100) DEFAULT 'Other',
+    payment_method VARCHAR(50) DEFAULT 'Cash',
+    amount DECIMAL(10,2) NOT NULL,
+    date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+$stmt = $conn->prepare("SELECT date, expense_name, description, category, payment_method, amount FROM expenses WHERE user_id = ? ORDER BY date DESC");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$income_records = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$expense_records = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 $conn->close();
 ?>
@@ -26,7 +38,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Income List | Acadexa</title>
+    <title>Expense Sheet | Acadexa</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
@@ -123,8 +135,8 @@ $conn->close();
         <nav>
             <a href="dashboard.php">Home</a>
             <a href="income.php">Finance</a>
-            <a href="income_list.php" class="active">Income</a>
-            <a href="expense_list.php">Expense</a>
+            <a href="income_list.php">Income</a>
+            <a href="expense_list.php" class="active">Expense</a>
             <a href="empty_sheet.php">Sheets</a>
         </nav>
     </header>
@@ -138,32 +150,30 @@ $conn->close();
             const phpData = <?php echo json_encode(array_map(function($record) {
                 return [
                     $record['date'],
-                    $record['source'],
+                    $record['expense_name'],
                     $record['description'] ?: '',
                     $record['category'],
                     $record['payment_method'],
                     $record['amount']
                 ];
-            }, $income_records)); ?>;
-
-
+            }, $expense_records)); ?>;
 
             luckysheet.create({
                 container: 'spreadsheet',
                 loading: false,
                 showinfobar: false,
                 data: [{
-                    name: 'Income Records',
-                    color: '#4361ee',
+                    name: 'Expense Records',
+                    color: '#ef233c',
                     status: 1,
                     order: 0,
                     celldata: [
-                        { r: 0, c: 0, v: { v: 'Date', bg: '#4361ee', fc: '#ffffff', bl: 1 } },
-                        { r: 0, c: 1, v: { v: 'Source', bg: '#4361ee', fc: '#ffffff', bl: 1 } },
-                        { r: 0, c: 2, v: { v: 'Description', bg: '#4361ee', fc: '#ffffff', bl: 1 } },
-                        { r: 0, c: 3, v: { v: 'Category', bg: '#4361ee', fc: '#ffffff', bl: 1 } },
-                        { r: 0, c: 4, v: { v: 'Payment Method', bg: '#4361ee', fc: '#ffffff', bl: 1 } },
-                        { r: 0, c: 5, v: { v: 'Amount (₹)', bg: '#4361ee', fc: '#ffffff', bl: 1 } },
+                        { r: 0, c: 0, v: { v: 'Date', bg: '#ef233c', fc: '#ffffff', bl: 1 } },
+                        { r: 0, c: 1, v: { v: 'Expense Name', bg: '#ef233c', fc: '#ffffff', bl: 1 } },
+                        { r: 0, c: 2, v: { v: 'Description', bg: '#ef233c', fc: '#ffffff', bl: 1 } },
+                        { r: 0, c: 3, v: { v: 'Category', bg: '#ef233c', fc: '#ffffff', bl: 1 } },
+                        { r: 0, c: 4, v: { v: 'Payment Method', bg: '#ef233c', fc: '#ffffff', bl: 1 } },
+                        { r: 0, c: 5, v: { v: 'Amount (₹)', bg: '#ef233c', fc: '#ffffff', bl: 1 } },
                         ...phpData.flatMap((row, i) => [
                             { r: i + 1, c: 0, v: { v: row[0] } },
                             { r: i + 1, c: 1, v: { v: row[1] } },
@@ -180,7 +190,7 @@ $conn->close();
                     },
                     frozen: { type: 'row', range: { row_focus: 0, column_focus: 0 } }
                 }],
-                title: 'Income Records',
+                title: 'Expense Records',
                 userInfo: false,
                 showsheetbar: true,
                 showstatisticBar: true,

@@ -155,6 +155,7 @@ $conn->close();
             position: sticky;
             top: 0;
             z-index: 100;
+            height: 76px;
         }
         
         .logo {
@@ -164,6 +165,12 @@ $conn->close();
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.5px;
+        }
+        
+        .logo img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
         }
         
         nav {
@@ -449,13 +456,13 @@ $conn->close();
 
 <body>
     <header>
-        <div class="logo">Acadexa</div>
+        <?php include 'header_logo.php'; ?>
         <nav>
-            <a href="dashboard.php">Dashboard</a>
+            <a href="dashboard.php">Home</a>
             <a href="income.php" class="active">Finance</a>
-            <a href="income_list.php">Income List</a>
-            <a href="profile.php">Profile</a>
-            <a href="logout.php">Logout</a>
+            <a href="#" onclick="showIncomeSheet(); return false;">Income</a>
+            <a href="#" onclick="showExpenseSheet(); return false;">Expense</a>
+            <a href="#" onclick="showEmptySheet(); return false;">Sheets</a>
         </nav>
     </header>
 
@@ -623,6 +630,18 @@ $conn->close();
     <script>
         // Set today's date as default
         document.getElementById('incomeDate').value = new Date().toISOString().split('T')[0];
+
+        function showIncomeSheet() {
+            window.location.href = 'income_list.php';
+        }
+
+        function showExpenseSheet() {
+            window.location.href = 'expense_list.php';
+        }
+
+        function showEmptySheet() {
+            window.location.href = 'empty_sheet.php';
+        }
 
         function showAddIncomeModal() {
             document.getElementById('addIncomeModal').style.display = 'flex';
