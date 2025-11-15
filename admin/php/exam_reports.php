@@ -238,13 +238,12 @@
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 15px;
-            cursor: pointer;
             transition: var(--transition);
+            position: relative;
         }
         
         .exam-card:hover {
             border-color: var(--primary);
-            transform: translateX(5px);
             box-shadow: var(--card-shadow);
         }
         
@@ -258,6 +257,317 @@
             font-size: 0.9rem;
             color: var(--gray);
             margin-bottom: 5px;
+        }
+        
+        .btn-view {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            padding: 8px 20px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .btn-view:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.4);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background-color: #f8f9fa;
+            margin: 1.5% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 92%;
+            max-width: 1100px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+            animation: slideDown 0.4s ease;
+            overflow: hidden;
+        }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-80px) scale(0.95); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--white);
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .modal-header h2 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .close {
+            color: var(--white);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            transition: var(--transition);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            padding: 40px;
+            background: #f8f9fa;
+        }
+        
+        .performance-overview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 35px;
+        }
+        
+        .stats-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .performance-card {
+            background: var(--white);
+            padding: 20px 25px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            transition: var(--transition);
+            border-left: 5px solid;
+        }
+        
+        .performance-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .performance-card.high {
+            border-left-color: #10b981;
+            background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%);
+        }
+        
+        .performance-card.average {
+            border-left-color: #f59e0b;
+            background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+        }
+        
+        .performance-card.poor {
+            border-left-color: #ef4444;
+            background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
+        }
+        
+        .performance-card-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .performance-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .performance-card.high .performance-icon {
+            background: #d1fae5;
+            color: #10b981;
+        }
+        
+        .performance-card.average .performance-icon {
+            background: #fef3c7;
+            color: #f59e0b;
+        }
+        
+        .performance-card.poor .performance-icon {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        
+        .performance-info h3 {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-bottom: 5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .performance-info p {
+            font-size: 0.95rem;
+            color: var(--dark);
+            font-weight: 700;
+        }
+        
+        .performance-card .count {
+            font-size: 2.2rem;
+            font-weight: 800;
+        }
+        
+        .performance-card.high .count {
+            color: #10b981;
+        }
+        
+        .performance-card.average .count {
+            color: #f59e0b;
+        }
+        
+        .performance-card.poor .count {
+            color: #ef4444;
+        }
+        
+        .chart-section {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .chart-section h3 {
+            font-size: 1rem;
+            color: var(--dark);
+            margin-bottom: 25px;
+            font-weight: 700;
+            text-align: center;
+        }
+        
+        .chart-wrapper {
+            width: 100%;
+            max-width: 350px;
+            height: 350px;
+            position: relative;
+        }
+        
+        .recommendation {
+            background: var(--white);
+            padding: 25px 30px;
+            border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #667eea;
+        }
+        
+        .recommendation h3 {
+            font-size: 1.1rem;
+            color: #667eea;
+            margin-bottom: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .recommendation p {
+            font-size: 0.95rem;
+            color: #4b5563;
+            line-height: 1.7;
+        }
+        
+        .marks-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 35px;
+        }
+        
+        .marks-card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            border-top: 4px solid;
+        }
+        
+        .marks-card.highest {
+            border-top-color: #10b981;
+        }
+        
+        .marks-card.avg {
+            border-top-color: #3b82f6;
+        }
+        
+        .marks-card.lowest {
+            border-top-color: #ef4444;
+        }
+        
+        .marks-card h4 {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .marks-card .marks-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+        
+        .marks-card.highest .marks-value {
+            color: #10b981;
+        }
+        
+        .marks-card.avg .marks-value {
+            color: #3b82f6;
+        }
+        
+        .marks-card.lowest .marks-value {
+            color: #ef4444;
+        }
+        
+        .marks-card p {
+            font-size: 0.8rem;
+            color: var(--gray);
         }
         
         .stat-box {
@@ -490,14 +800,32 @@
             </div>
 
             <div class="filter-card">
-                <h3>Top 20 Students</h3>
-                <p style="color: var(--gray); margin-bottom: 20px;">Select classes to view top performing students</p>
+                <h3>Select Classes</h3>
+                <p style="color: var(--gray); margin-bottom: 20px;">Choose classes to view top performing students</p>
                 <div id="class-checkbox-container" class="class-checkbox-list"></div>
-                <button class="btn-primary" onclick="loadTopStudents()"><i class="fas fa-trophy"></i> Show Top 20 Students</button>
+            </div>
+
+            <div id="exam-selection-card" class="filter-card" style="display:none;">
+                <h3>Select Exams</h3>
+                <p style="color: var(--gray); margin-bottom: 20px;">Choose exams from selected classes</p>
+                <div id="exam-checkbox-container" class="class-checkbox-list"></div>
+            </div>
+
+            <div id="top-n-selection-card" class="filter-card" style="display:none;">
+                <h3>Top Students</h3>
+                <div class="filter-row">
+                    <div class="input-group">
+                        <label>Number of Top Students</label>
+                        <select id="top-n-select" class="input-field">
+                            <option value="">Select Number</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" onclick="loadTopNStudents()"><i class="fas fa-trophy"></i> Show Top Students</button>
+                </div>
             </div>
 
             <div id="top-students-data" class="data-section" style="display:none;">
-                <h3 style="margin-bottom: 20px;">Top 20 Students</h3>
+                <h3 style="margin-bottom: 20px;" id="top-students-title">Top Students</h3>
                 <div class="table-container">
                     <table class="report-table">
                         <thead>
@@ -514,8 +842,89 @@
                     </table>
                 </div>
                 <div class="download-actions">
-                    <button class="btn-download" onclick="downloadTopStudentsPDF()"><i class="fas fa-file-pdf"></i> Download PDF</button>
-                    <button class="btn-download" onclick="downloadTopStudentsCSV()"><i class="fas fa-file-csv"></i> Download CSV</button>
+                    <button class="btn-download" onclick="generateReport()"><i class="fas fa-file-alt"></i> Generate Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Modal -->
+    <div id="performanceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalExamTitle"><i class="fas fa-chart-pie"></i> Exam Performance Analysis</h2>
+                <span class="close" onclick="closePerformanceModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="marks-summary">
+                    <div class="marks-card highest">
+                        <h4>Highest Marks</h4>
+                        <div class="marks-value" id="highestMarks">0</div>
+                        <p>Maximum Score</p>
+                    </div>
+                    <div class="marks-card avg">
+                        <h4>Average Marks</h4>
+                        <div class="marks-value" id="averageMarks">0</div>
+                        <p>Mean Score</p>
+                    </div>
+                    <div class="marks-card lowest">
+                        <h4>Lowest Marks</h4>
+                        <div class="marks-value" id="lowestMarks">0</div>
+                        <p>Minimum Score</p>
+                    </div>
+                </div>
+                
+                <div class="performance-overview">
+                    <div class="stats-section">
+                        <div class="performance-card high">
+                            <div class="performance-card-content">
+                                <div class="performance-icon">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <div class="performance-info">
+                                    <h3>Highest Marks</h3>
+                                    <p>75% and Above</p>
+                                </div>
+                            </div>
+                            <div class="count" id="highCount">0</div>
+                        </div>
+                        <div class="performance-card average">
+                            <div class="performance-card-content">
+                                <div class="performance-icon">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="performance-info">
+                                    <h3>Average Marks</h3>
+                                    <p>Pass to 75%</p>
+                                </div>
+                            </div>
+                            <div class="count" id="avgCount">0</div>
+                        </div>
+                        <div class="performance-card poor">
+                            <div class="performance-card-content">
+                                <div class="performance-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="performance-info">
+                                    <h3>Poor Marks</h3>
+                                    <p>Below Passing</p>
+                                </div>
+                            </div>
+                            <div class="count" id="poorCount">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-section">
+                        <h3>Performance Distribution</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="recommendation" id="recommendationBox">
+                    <h3><i class="fas fa-lightbulb"></i> Recommendation</h3>
+                    <p id="recommendationText">Loading...</p>
                 </div>
             </div>
         </div>
@@ -523,6 +932,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         let topStudentsData = [];
 
@@ -563,11 +973,6 @@
                 return res.json();
             })
             .then(data => {
-                if(data.error) {
-                    alert(data.error);
-                    return;
-                }
-                
                 displayExamDetails(data);
                 document.getElementById('exam-data').style.display = 'block';
             })
@@ -577,39 +982,31 @@
             });
         }
 
-        function displayExamDetails(exam) {
+        function displayExamDetails(exams) {
             const container = document.getElementById('exam-details-container');
-            container.innerHTML = `
-                <div class="exam-details">
-                    <h3>${exam.exam_name}</h3>
-                    <div class="detail-grid">
-                        <div class="detail-item">
-                            <span class="detail-label">Class</span>
-                            <span class="detail-value">${exam.class_name} (${exam.code})</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Exam Date</span>
-                            <span class="detail-value">${exam.exam_date}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Start Time</span>
-                            <span class="detail-value">${exam.start_time}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">End Time</span>
-                            <span class="detail-value">${exam.end_time}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Total Marks</span>
-                            <span class="detail-value">${exam.total_marks}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Passing Marks</span>
-                            <span class="detail-value">${exam.passing_marks}</span>
-                        </div>
+            container.innerHTML = '';
+            
+            if(!Array.isArray(exams) || exams.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color: var(--gray);">No exams found</p>';
+                return;
+            }
+            
+            container.innerHTML = '<h3 style="margin-bottom: 20px;">Search Results</h3>';
+            exams.forEach(exam => {
+                const viewButton = exam.has_marks ? 
+                    `<button class="btn-view" onclick="showPerformanceModal(${exam.id}, '${exam.exam_name}')">View</button>` : '';
+                
+                container.innerHTML += `
+                    <div class="exam-card">
+                        <h4>${exam.exam_name}</h4>
+                        <p><i class="fas fa-school"></i> Class: ${exam.class_name} (${exam.code})</p>
+                        <p><i class="fas fa-calendar"></i> Date: ${exam.exam_date}</p>
+                        <p><i class="fas fa-clock"></i> Time: ${exam.start_time} - ${exam.end_time}</p>
+                        <p><i class="fas fa-star"></i> Total Marks: ${exam.total_marks} | Passing: ${exam.passing_marks}</p>
+                        ${viewButton}
                     </div>
-                </div>
-            `;
+                `;
+            });
         }
 
         function loadClasses() {
@@ -655,12 +1052,16 @@
                     container.innerHTML = '<p style="text-align:center; color: var(--gray);">No exams found for this class</p>';
                 } else {
                     data.forEach(exam => {
+                        const viewButton = exam.has_marks ? 
+                            `<button class="btn-view" onclick="showPerformanceModal(${exam.id}, '${exam.exam_name}')">View</button>` : '';
+                        
                         container.innerHTML += `
-                            <div class="exam-card" onclick="showClassExamDetails(${exam.id})">
+                            <div class="exam-card">
                                 <h4>${exam.exam_name}</h4>
                                 <p><i class="fas fa-calendar"></i> Date: ${exam.exam_date}</p>
                                 <p><i class="fas fa-clock"></i> Time: ${exam.start_time} - ${exam.end_time}</p>
                                 <p><i class="fas fa-star"></i> Total Marks: ${exam.total_marks} | Passing: ${exam.passing_marks}</p>
+                                ${viewButton}
                             </div>
                         `;
                     });
@@ -747,37 +1148,106 @@
                     data.classes.forEach(cls => {
                         container.innerHTML += `
                             <div class="checkbox-item">
-                                <input type="checkbox" id="class-${cls.code}" value="${cls.code}">
+                                <input type="checkbox" id="class-${cls.code}" value="${cls.code}" onchange="loadExamsForSelectedClasses()">
                                 <label for="class-${cls.code}">${cls.name} (${cls.code})</label>
                             </div>
                         `;
                     });
+                    
+                    const topNSelect = document.getElementById('top-n-select');
+                    topNSelect.innerHTML = '<option value="">Select Number</option>';
+                    for(let i = 1; i <= 20; i++) {
+                        topNSelect.innerHTML += `<option value="${i}">${i}</option>`;
+                    }
                 })
                 .catch(err => {
                     console.error('Error:', err);
                     alert('Failed to load institute data');
                 });
         }
-
-        function loadTopStudents() {
+        
+        function loadExamsForSelectedClasses() {
             const checkboxes = document.querySelectorAll('#class-checkbox-container input[type="checkbox"]:checked');
             const selectedClasses = Array.from(checkboxes).map(cb => cb.value);
             
             if(selectedClasses.length === 0) {
-                alert('Please select at least one class');
+                document.getElementById('exam-selection-card').style.display = 'none';
+                document.getElementById('top-n-selection-card').style.display = 'none';
+                document.getElementById('top-students-data').style.display = 'none';
                 return;
             }
-
-            fetch('get_top_students.php', {
+            
+            fetch('get_class_exams_with_marks.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                body: `classes=${selectedClasses.join(',')}`
+                body: `class_codes=${selectedClasses.join(',')}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('exam-checkbox-container');
+                container.innerHTML = '';
+                
+                if(data.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color: var(--gray);">No exams with marks found for selected classes</p>';
+                } else {
+                    data.forEach(exam => {
+                        container.innerHTML += `
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="exam-${exam.id}" value="${exam.id}" onchange="checkExamSelection()">
+                                <label for="exam-${exam.id}">${exam.exam_name} (${exam.code}) - ${exam.exam_date}</label>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('exam-selection-card').style.display = 'block';
+                document.getElementById('top-n-selection-card').style.display = 'none';
+                document.getElementById('top-students-data').style.display = 'none';
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Failed to load exams');
+            });
+        }
+        
+        function checkExamSelection() {
+            const checkboxes = document.querySelectorAll('#exam-checkbox-container input[type="checkbox"]:checked');
+            
+            if(checkboxes.length > 0) {
+                document.getElementById('top-n-selection-card').style.display = 'block';
+            } else {
+                document.getElementById('top-n-selection-card').style.display = 'none';
+                document.getElementById('top-students-data').style.display = 'none';
+            }
+        }
+        
+        function loadTopNStudents() {
+            const examCheckboxes = document.querySelectorAll('#exam-checkbox-container input[type="checkbox"]:checked');
+            const selectedExams = Array.from(examCheckboxes).map(cb => cb.value);
+            const topN = document.getElementById('top-n-select').value;
+            
+            if(selectedExams.length === 0) {
+                alert('Please select at least one exam');
+                return;
+            }
+            
+            if(!topN) {
+                alert('Please select number of top students');
+                return;
+            }
+            
+            fetch('get_top_n_students.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `exam_ids=${selectedExams.join(',')}&top_n=${topN}`
             })
             .then(res => res.json())
             .then(data => {
                 topStudentsData = data;
                 const tbody = document.getElementById('top-students-tbody');
                 tbody.innerHTML = '';
+                
+                document.getElementById('top-students-title').textContent = `Top ${topN} Students`;
                 
                 if(data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No data found</td></tr>';
@@ -797,46 +1267,288 @@
                 }
                 
                 document.getElementById('top-students-data').style.display = 'block';
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Failed to load top students');
             });
         }
 
-        function downloadTopStudentsPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            doc.setFontSize(18);
-            doc.text('Top 20 Students Report', 14, 20);
-            
-            const tableData = topStudentsData.map((student, index) => [
-                index + 1,
-                student.student_name,
-                student.roll_no,
-                student.class_code,
-                student.total_marks,
-                student.percentage + '%'
-            ]);
-            
-            doc.autoTable({
-                head: [['Rank', 'Student Name', 'Roll No', 'Class', 'Total Marks', 'Percentage']],
-                body: tableData,
-                startY: 30
-            });
-            
-            doc.save('top_20_students.pdf');
-        }
 
-        function downloadTopStudentsCSV() {
-            let csv = 'Rank,Student Name,Roll No,Class,Total Marks,Percentage\n';
-            topStudentsData.forEach((student, index) => {
-                csv += `${index + 1},${student.student_name},${student.roll_no},${student.class_code},${student.total_marks},${student.percentage}%\n`;
-            });
+
+        function generateReport() {
+            const topN = document.getElementById('top-n-select').value;
             
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'top_20_students.csv';
-            a.click();
+            fetch('get_header_logo.php')
+                .then(res => res.json())
+                .then(logoData => {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    
+                    let startY = 10;
+                    
+                    if(logoData.logo && logoData.logo !== null && logoData.logo !== '') {
+                        const logoPath = '../' + logoData.logo;
+                        const img = new Image();
+                        img.crossOrigin = 'Anonymous';
+                        img.onload = function() {
+                            try {
+                                doc.addImage(img, 'PNG', pageWidth / 2 - 20, 5, 40, 20);
+                            } catch(e) {
+                                console.log('Logo error:', e);
+                            }
+                            generatePDFContent();
+                        };
+                        img.onerror = function() {
+                            generatePDFContent();
+                        };
+                        img.src = logoPath;
+                        startY = 30;
+                    } else {
+                        generatePDFContent();
+                    }
+                    
+                    function generatePDFContent() {
+                        doc.setFillColor(67, 97, 238);
+                        doc.rect(0, startY, pageWidth, 20, 'F');
+                        
+                        doc.setTextColor(255, 255, 255);
+                        doc.setFontSize(18);
+                        doc.setFont(undefined, 'bold');
+                        doc.text('OUR TOPPERS', pageWidth / 2, startY + 13, { align: 'center' });
+                        
+                        doc.setTextColor(0, 0, 0);
+                        doc.setFontSize(11);
+                        doc.setFont(undefined, 'normal');
+                        doc.text(`Top ${topN} Students - Accounts RESULT`, pageWidth / 2, startY + 28, { align: 'center' });
+                        
+                        const tableData = topStudentsData.map((student, index) => [
+                            index + 1,
+                            student.student_name,
+                            student.roll_no,
+                            student.class_code,
+                            student.total_marks,
+                            student.percentage + '%'
+                        ]);
+                        
+                        const fontSize = topN <= 10 ? 10 : 8;
+                        const cellPadding = topN <= 10 ? 5 : 3;
+                        
+                        doc.autoTable({
+                            head: [['Rank', 'Student Name', 'Roll No', 'Class', 'Total Marks', 'Percentage']],
+                            body: tableData,
+                            startY: startY + 35,
+                            theme: 'grid',
+                            headStyles: {
+                                fillColor: [67, 97, 238],
+                                textColor: [255, 255, 255],
+                                fontSize: fontSize,
+                                fontStyle: 'bold',
+                                halign: 'center'
+                            },
+                            bodyStyles: {
+                                fontSize: fontSize,
+                                cellPadding: cellPadding,
+                                halign: 'center'
+                            },
+                            alternateRowStyles: {
+                                fillColor: [240, 244, 255]
+                            },
+                            columnStyles: {
+                                0: { cellWidth: 15 },
+                                1: { cellWidth: 50, halign: 'left' },
+                                2: { cellWidth: 25 },
+                                3: { cellWidth: 25 },
+                                4: { cellWidth: 30 },
+                                5: { cellWidth: 30 }
+                            },
+                            margin: { left: 14, right: 14 },
+                            didDrawPage: function(data) {
+                                doc.setFontSize(8);
+                                doc.setTextColor(100);
+                                doc.text('www.yoursite.com', 14, pageHeight - 10);
+                                doc.text('+91 9876543210', pageWidth - 40, pageHeight - 10);
+                            }
+                        });
+                        
+                        doc.save(`top_${topN}_students_report.pdf`);
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    
+                    doc.setFillColor(67, 97, 238);
+                    doc.rect(0, 10, pageWidth, 20, 'F');
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(18);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('OUR TOPPERS', pageWidth / 2, 20, { align: 'center' });
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(11);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(`Top ${topN} Students - Accounts RESULT`, pageWidth / 2, 38, { align: 'center' });
+                    
+                    const tableData = topStudentsData.map((student, index) => [
+                        index + 1, student.student_name, student.roll_no, student.class_code, student.total_marks, student.percentage + '%'
+                    ]);
+                    const fontSize = topN <= 10 ? 10 : 8;
+                    const cellPadding = topN <= 10 ? 5 : 3;
+                    
+                    doc.autoTable({
+                        head: [['Rank', 'Student Name', 'Roll No', 'Class', 'Total Marks', 'Percentage']],
+                        body: tableData,
+                        startY: 45,
+                        theme: 'grid',
+                        headStyles: { fillColor: [67, 97, 238], textColor: [255, 255, 255], fontSize: fontSize, fontStyle: 'bold', halign: 'center' },
+                        bodyStyles: { fontSize: fontSize, cellPadding: cellPadding, halign: 'center' },
+                        alternateRowStyles: { fillColor: [240, 244, 255] },
+                        columnStyles: { 0: { cellWidth: 15 }, 1: { cellWidth: 50, halign: 'left' }, 2: { cellWidth: 25 }, 3: { cellWidth: 25 }, 4: { cellWidth: 30 }, 5: { cellWidth: 30 } },
+                        margin: { left: 14, right: 14 },
+                        didDrawPage: function(data) {
+                            doc.setFontSize(8);
+                            doc.setTextColor(100);
+                            doc.text('www.yoursite.com', 14, pageHeight - 10);
+                            doc.text('+91 9876543210', pageWidth - 40, pageHeight - 10);
+                        }
+                    });
+                    doc.save(`top_${topN}_students_report.pdf`);
+                });
+        }
+        
+        let performanceChart = null;
+        
+        function showPerformanceModal(examId, examName) {
+            document.getElementById('modalExamTitle').textContent = examName + ' - Performance Analysis';
+            document.getElementById('performanceModal').style.display = 'block';
+            
+            fetch('get_exam_performance.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `exam_id=${examId}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.error) {
+                    alert(data.error);
+                    closePerformanceModal();
+                    return;
+                }
+                
+                document.getElementById('highCount').textContent = data.high_count;
+                document.getElementById('avgCount').textContent = data.average_count;
+                document.getElementById('poorCount').textContent = data.poor_count;
+                
+                document.getElementById('highestMarks').textContent = data.highest_marks;
+                document.getElementById('averageMarks').textContent = data.average_marks;
+                document.getElementById('lowestMarks').textContent = data.lowest_marks;
+                
+                const totalStudents = data.high_count + data.average_count + data.poor_count;
+                const poorPercentage = (data.poor_count / totalStudents) * 100;
+                
+                let recommendation = '';
+                if(poorPercentage > 40) {
+                    recommendation = 'More preparation is needed. A significant number of students are performing below expectations. Consider additional tutoring sessions, revision classes, and focused attention on weak areas.';
+                } else if(poorPercentage > 20) {
+                    recommendation = 'Moderate preparation needed. Some students require additional support. Identify struggling students and provide targeted assistance to improve their performance.';
+                } else {
+                    recommendation = 'Good performance overall! The majority of students are performing well. Continue with the current teaching methodology and provide minor support where needed.';
+                }
+                
+                document.getElementById('recommendationText').textContent = recommendation;
+                
+                renderPerformanceChart(data.high_count, data.average_count, data.poor_count);
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Failed to load performance data');
+                closePerformanceModal();
+            });
+        }
+        
+        function closePerformanceModal() {
+            document.getElementById('performanceModal').style.display = 'none';
+            if(performanceChart) {
+                performanceChart.destroy();
+                performanceChart = null;
+            }
+        }
+        
+        function renderPerformanceChart(high, average, poor) {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            if(performanceChart) {
+                performanceChart.destroy();
+            }
+            
+            performanceChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Highest Marks', 'Average Marks', 'Poor Marks'],
+                    datasets: [{
+                        data: [high, average, poor],
+                        backgroundColor: [
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444'
+                        ],
+                        borderColor: '#ffffff',
+                        borderWidth: 3,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 13,
+                                    weight: '600',
+                                    family: 'Inter'
+                                },
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+        
+        window.onclick = function(event) {
+            const modal = document.getElementById('performanceModal');
+            if (event.target == modal) {
+                closePerformanceModal();
+            }
         }
     </script>
 </body>

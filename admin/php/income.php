@@ -79,9 +79,27 @@ $result = $stmt->get_result()->fetch_assoc();
 $todayIncome = $result['today'] ?? 0;
 $stmt->close();
 
-// Get recent income entries
+// Get total expense
+$totalExpense = 0;
+$stmt = $conn->prepare("SELECT SUM(amount) as total FROM expense WHERE user_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result()->fetch_assoc();
+$totalExpense = $result['total'] ?? 0;
+$stmt->close();
+
+// Get total decided fees from fees_structure
+$totalDecidedFees = 0;
+$stmt = $conn->prepare("SELECT SUM(decided_fees) as total FROM fees_structure WHERE user_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result()->fetch_assoc();
+$totalDecidedFees = $result['total'] ?? 0;
+$stmt->close();
+
+// Get recent income entries (15 entries)
 $recentIncome = [];
-$stmt = $conn->prepare("SELECT * FROM income WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT 10");
+$stmt = $conn->prepare("SELECT * FROM income WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT 15");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -90,14 +108,14 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 
-// Get income by category for this user
-$categoryData = [];
-$stmt = $conn->prepare("SELECT category, SUM(amount) as total FROM income WHERE user_id = ? GROUP BY category ORDER BY total DESC");
+// Get expense by category for pie chart
+$expenseCategoryData = [];
+$stmt = $conn->prepare("SELECT category, SUM(amount) as total FROM expense WHERE user_id = ? GROUP BY category ORDER BY total DESC");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 while ($row = $result->fetch_assoc()) {
-    $categoryData[] = $row;
+    $expenseCategoryData[] = $row;
 }
 $stmt->close();
 
@@ -300,6 +318,14 @@ $conn->close();
             background: linear-gradient(135deg, var(--accent), #c77dff);
         }
         
+        .stat-card.expense .icon {
+            background: linear-gradient(135deg, #ef233c, #d90429);
+        }
+        
+        .stat-card.fees .icon {
+            background: linear-gradient(135deg, #06ffa5, #00d9ff);
+        }
+        
         .stat-card .value {
             font-size: 2.2rem;
             font-weight: 700;
@@ -420,6 +446,38 @@ $conn->close();
             color: var(--success);
         }
         
+        .recent-income-scroll {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .recent-income-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .recent-income-scroll::-webkit-scrollbar-track {
+            background: var(--light);
+            border-radius: 10px;
+        }
+        
+        .recent-income-scroll::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+        
+        #expenseChart {
+            max-width: 350px;
+            height: 250px;
+            margin: 0 auto;
+        }
+        
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 0;
+        }
+        
         .empty-state {
             text-align: center;
             padding: 40px;
@@ -485,95 +543,87 @@ $conn->close();
                 <div class="label">Total Income</div>
             </div>
 
+            <div class="stat-card expense">
+                <div class="icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="value">₹<?php echo number_format($totalExpense, 2); ?></div>
+                <div class="label">Total Expense</div>
+            </div>
+
+            <div class="stat-card fees">
+                <div class="icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="value">₹<?php echo number_format($totalDecidedFees, 2); ?></div>
+                <div class="label">Expected Yearly Fees</div>
+            </div>
+
             <div class="stat-card monthly">
                 <div class="icon">
                     <i class="fas fa-calendar-month"></i>
                 </div>
                 <div class="value">₹<?php echo number_format($monthlyIncome, 2); ?></div>
-                <div class="label">This Month</div>
-            </div>
-
-            <div class="stat-card today">
-                <div class="icon">
-                    <i class="fas fa-calendar-day"></i>
-                </div>
-                <div class="value">₹<?php echo number_format($todayIncome, 2); ?></div>
-                <div class="label">Today</div>
-            </div>
-
-            <div class="stat-card count">
-                <div class="icon">
-                    <i class="fas fa-receipt"></i>
-                </div>
-                <div class="value"><?php echo $incomeCount; ?></div>
-                <div class="label">Total Entries</div>
+                <div class="label">This Month Income</div>
             </div>
         </div>
 
-        <!-- Dashboard Grid -->
-        <div class="dashboard-grid">
-            <!-- Recent Income -->
-            <div class="income-card">
-                <h3 class="card-title">Recent Income</h3>
-                <?php if (empty($recentIncome)): ?>
-                    <div class="empty-state">
-                        <i class="fas fa-inbox"></i>
-                        <p>No income entries found</p>
-                        <p style="font-size: 0.9rem; margin-top: 10px;">Start by adding your first income entry</p>
-                    </div>
-                <?php else: ?>
-                    <div style="overflow-x: auto;">
-                        <table class="income-table">
-                            <thead>
+        <!-- Recent Income Section -->
+        <div class="income-card" style="margin-bottom: 30px;">
+            <h3 class="card-title">Recent Income (Last 15 Entries)</h3>
+            <?php if (empty($recentIncome)): ?>
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>No income entries found</p>
+                    <p style="font-size: 0.9rem; margin-top: 10px;">Start by adding your first income entry</p>
+                </div>
+            <?php else: ?>
+                <div class="recent-income-scroll">
+                    <table class="income-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Source</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($recentIncome as $income): ?>
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Source</th>
-                                    <th>Category</th>
-                                    <th>Amount</th>
-                                    <th>Method</th>
+                                    <td><?php echo date('d M Y', strtotime($income['date'])); ?></td>
+                                    <td><?php echo htmlspecialchars($income['source']); ?></td>
+                                    <td><span class="category-tag"><?php echo htmlspecialchars($income['category']); ?></span></td>
+                                    <td class="amount">₹<?php echo number_format($income['amount'], 2); ?></td>
+                                    <td><?php echo htmlspecialchars($income['payment_method']); ?></td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($recentIncome as $income): ?>
-                                    <tr>
-                                        <td><?php echo date('d M Y', strtotime($income['date'])); ?></td>
-                                        <td><?php echo htmlspecialchars($income['source']); ?></td>
-                                        <td><span class="category-tag"><?php echo htmlspecialchars($income['category']); ?></span></td>
-                                        <td class="amount">₹<?php echo number_format($income['amount'], 2); ?></td>
-                                        <td><?php echo htmlspecialchars($income['payment_method']); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div style="text-align: center; margin-top: 20px;">
-                        <a href="income_list.php" class="btn" style="background: var(--primary-light); color: var(--primary); padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
-                            View All Records
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                    </div>
-                <?php endif; ?>
-            </div>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="income_list.php" style="background: var(--primary-light); color: var(--primary); padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                        View All Records
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            <?php endif; ?>
+        </div>
 
-            <!-- Income by Category -->
-            <div class="income-card">
-                <h3 class="card-title">Income by Category</h3>
-                <?php if (empty($categoryData)): ?>
-                    <div class="empty-state">
-                        <i class="fas fa-chart-pie"></i>
-                        <p>No categories found</p>
-                    </div>
-                <?php else: ?>
-                    <ul class="category-list">
-                        <?php foreach ($categoryData as $category): ?>
-                            <li class="category-item">
-                                <span class="category-name"><?php echo htmlspecialchars($category['category']); ?></span>
-                                <span class="category-amount">₹<?php echo number_format($category['total'], 2); ?></span>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                <?php endif; ?>
-            </div>
+        <!-- Expense by Category Pie Chart -->
+        <div class="income-card">
+            <h3 class="card-title">Expense by Category</h3>
+            <?php if (empty($expenseCategoryData)): ?>
+                <div class="empty-state">
+                    <i class="fas fa-chart-pie"></i>
+                    <p>No expense data found</p>
+                </div>
+            <?php else: ?>
+                <div class="chart-container">
+                    <canvas id="expenseChart"></canvas>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -627,9 +677,65 @@ $conn->close();
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Set today's date as default
         document.getElementById('incomeDate').value = new Date().toISOString().split('T')[0];
+        
+        // Expense Pie Chart
+        <?php if (!empty($expenseCategoryData)): ?>
+        const expenseData = <?php echo json_encode($expenseCategoryData); ?>;
+        const ctx = document.getElementById('expenseChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: expenseData.map(item => item.category),
+                datasets: [{
+                    data: expenseData.map(item => item.total),
+                    backgroundColor: [
+                        '#4361ee',
+                        '#f72585',
+                        '#4cc9f0',
+                        '#f8961e',
+                        '#ef233c',
+                        '#3a0ca3',
+                        '#06ffa5',
+                        '#c77dff',
+                        '#ff6b35',
+                        '#00d9ff'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            padding: 10,
+                            font: {
+                                size: 11,
+                                family: 'Inter'
+                            },
+                            boxWidth: 12
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                return label + ': ₹' + value.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        <?php endif; ?>
 
         function showIncomeSheet() {
             window.location.href = 'income_list.php';
@@ -681,6 +787,13 @@ $conn->close();
                 console.error('Error:', error);
                 alert('An error occurred. Please try again.');
             });
+        });
+        
+        // Close modal on outside click
+        document.getElementById('addIncomeModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddIncomeModal();
+            }
         });
     </script>
 </body>

@@ -345,75 +345,75 @@ $conn->close();
         <div id="marks-report" class="report-section">
             <div class="filter-card">
                 <h3>Select Filters</h3>
-                <div id="marks_report_form">
-                    <div class="filter-row">
-                        <div class="input-group">
-                            <label>Class</label>
-                            <select name="class_code" id="class_select_marks" class="input-field" required>
-                                <option value="">Choose a class</option>
-                                <?php foreach ($classes as $class): ?>
-                                    <option value="<?php echo htmlspecialchars($class['code']); ?>">
-                                        <?php echo htmlspecialchars($class['name']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
-                        <div class="input-group">
-                            <label>Exam (Optional)</label>
-                            <select name="exam_code" id="exam_select_marks" class="input-field">
-                                <option value="">Choose an exam</option>
-                            </select>
-                        </div>
-                        
-                        <div class="input-group">
-                            <label>Subject (Optional)</label>
-                            <select name="subject_code" id="subject_select_marks" class="input-field">
-                                <option value="">Choose a subject</option>
-                            </select>
-                        </div>
-                        
-                        <button type="button" class="btn-primary" onclick="generateReport()">Generate Report</button>
+                <div class="filter-row">
+                    <div class="input-group">
+                        <label>Class</label>
+                        <select id="class_select_marks" class="input-field" required>
+                            <option value="">Choose a class</option>
+                            <?php foreach ($classes as $class): ?>
+                                <option value="<?php echo htmlspecialchars($class['code']); ?>">
+                                    <?php echo htmlspecialchars($class['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
+                    
+                    <div class="input-group">
+                        <label>Exam</label>
+                        <select id="exam_select_marks" class="input-field" required>
+                            <option value="">Choose an exam</option>
+                        </select>
+                    </div>
+                    
+                    <button type="button" class="btn-primary" onclick="generateMarksReport()">Generate Report</button>
                 </div>
             </div>
             
-            <div id="results-container"></div>
+            <div id="marks-results-container"></div>
         </div>
 
         <!-- Individual Progress Report -->
         <div id="progress-report" class="report-section" style="display:none;">
             <div class="filter-card">
                 <h3>Select Student</h3>
-                <form method="POST" action="#">
-                    <div class="filter-row">
-                        <div class="input-group">
-                            <label>Class</label>
-                            <select name="class_code" id="class_select_progress" class="input-field" required>
-                                <option value="">Choose a class</option>
-                                <?php foreach ($classes as $class): ?>
-                                    <option value="<?php echo htmlspecialchars($class['code']); ?>">
-                                        <?php echo htmlspecialchars($class['name']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
-                        <div class="input-group">
-                            <label>Student</label>
-                            <select name="student_id" id="student_select_progress" class="input-field" required>
-                                <option value="">Choose a student</option>
-                            </select>
-                        </div>
-                        
-                        <button type="submit" class="btn-primary">Generate Report</button>
+                <div class="filter-row">
+                    <div class="input-group">
+                        <label>Class</label>
+                        <select id="class_select_progress" class="input-field" required>
+                            <option value="">Choose a class</option>
+                            <?php foreach ($classes as $class): ?>
+                                <option value="<?php echo htmlspecialchars($class['code']); ?>">
+                                    <?php echo htmlspecialchars($class['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
-                </form>
+                    
+                    <div class="input-group">
+                        <label>Student</label>
+                        <select id="student_select_progress" class="input-field" required>
+                            <option value="">Choose a student</option>
+                        </select>
+                    </div>
+                    
+                    <button type="button" class="btn-primary" onclick="generateProgressReport()">Generate Report</button>
+                </div>
             </div>
+            
+            <div id="progress-results-container"></div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+        
+        let currentReportData = null;
+
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             if(tab === 'marks') {
@@ -427,73 +427,45 @@ $conn->close();
             }
         }
 
-        // Load exams and subjects for Student Marks Report
+        // Load exams for Student Marks Report
         document.getElementById('class_select_marks').addEventListener('change', function() {
             const classCode = this.value;
-            const className = this.options[this.selectedIndex].text;
             const examSelect = document.getElementById('exam_select_marks');
-            const subjectSelect = document.getElementById('subject_select_marks');
-            
             examSelect.innerHTML = '<option value="">Choose an exam</option>';
-            subjectSelect.innerHTML = '<option value="">Choose a subject</option>';
+            document.getElementById('marks-results-container').innerHTML = '';
             
             if (classCode) {
-                fetch(`get_exams_subjects.php?class_code=${encodeURIComponent(classCode)}&class_name=${encodeURIComponent(className)}`)
+                fetch(`get_exams_by_class.php?class_code=${encodeURIComponent(classCode)}`)
                     .then(response => response.json())
-                    .then(data => {
-                        if (data.exams.length === 0) {
+                    .then(exams => {
+                        exams.forEach(exam => {
                             const option = document.createElement('option');
-                            option.value = '';
-                            option.textContent = 'No exam';
+                            option.value = exam.id;
+                            option.textContent = exam.exam_name;
                             examSelect.appendChild(option);
-                        } else {
-                            data.exams.forEach(exam => {
-                                const option = document.createElement('option');
-                                option.value = exam.code;
-                                option.textContent = exam.exam_name;
-                                examSelect.appendChild(option);
-                            });
-                        }
-                        data.subjects.forEach(subject => {
-                            const option = document.createElement('option');
-                            option.value = subject.subject_code;
-                            option.textContent = subject.subject_name;
-                            subjectSelect.appendChild(option);
                         });
                     });
             }
         });
 
-        function generateReport() {
+        function generateMarksReport() {
             const classCode = document.getElementById('class_select_marks').value;
-            const examCode = document.getElementById('exam_select_marks').value;
-            const subjectCode = document.getElementById('subject_select_marks').value;
+            const examId = document.getElementById('exam_select_marks').value;
             
-            if (!classCode) {
-                alert('Please select a class');
+            if (!classCode || !examId) {
+                alert('Please select both class and exam');
                 return;
             }
             
-            if (!examCode && !subjectCode) {
-                alert('Please select either an Exam or a Subject');
-                return;
-            }
-            
-            const params = new URLSearchParams({
-                class_code: classCode,
-                exam_code: examCode || '',
-                subject_code: subjectCode || ''
-            });
-            
-            fetch(`fetch_marks_report.php?${params}`)
+            fetch(`get_exam_marks.php?exam_id=${examId}`)
                 .then(response => response.json())
-                .then(result => {
-                    const container = document.getElementById('results-container');
+                .then(marks => {
+                    const container = document.getElementById('marks-results-container');
                     
-                    if (result.success && result.data.length > 0) {
-                        let html = '<div class="results-card"><h3>Student Marks Report</h3><table class="results-table"><thead><tr><th>Rank</th><th>Student Name</th><th>Marks Obtained</th><th>Total Marks</th><th>Percentage</th><th>Exam</th></tr></thead><tbody>';
+                    if (marks.length > 0) {
+                        let html = '<div class="results-card"><h3>Student Marks Report</h3><table class="results-table"><thead><tr><th>Rank</th><th>Student Name</th><th>Roll No</th><th>Marks Obtained</th><th>Total Marks</th><th>Percentage</th></tr></thead><tbody>';
                         
-                        result.data.forEach((row, index) => {
+                        marks.forEach((row, index) => {
                             const rank = index + 1;
                             const percentage = row.total_marks > 0 ? ((row.actual_marks / row.total_marks) * 100).toFixed(2) : 0;
                             const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : rank;
@@ -501,17 +473,17 @@ $conn->close();
                             html += `<tr>
                                 <td>${rankBadge}</td>
                                 <td>${row.student_name}</td>
+                                <td>${row.student_roll_no}</td>
                                 <td>${row.actual_marks}</td>
                                 <td>${row.total_marks}</td>
                                 <td>${percentage}%</td>
-                                <td>${row.exam_name}</td>
                             </tr>`;
                         });
                         
                         html += '</tbody></table></div>';
                         container.innerHTML = html;
                     } else {
-                        container.innerHTML = '<div class="results-card"><div class="no-data"><i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i><p>No marks data found for the selected filters.</p></div></div>';
+                        container.innerHTML = '<div class="results-card"><div class="no-data"><i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i><p>No marks data found.</p></div></div>';
                     }
                 })
                 .catch(error => {
@@ -524,8 +496,8 @@ $conn->close();
         document.getElementById('class_select_progress').addEventListener('change', function() {
             const classCode = this.value;
             const studentSelect = document.getElementById('student_select_progress');
-            
             studentSelect.innerHTML = '<option value="">Choose a student</option>';
+            document.getElementById('progress-results-container').innerHTML = '';
             
             if (classCode) {
                 fetch(`get_students_by_class.php?class_code=${encodeURIComponent(classCode)}`)
@@ -540,6 +512,225 @@ $conn->close();
                     });
             }
         });
+
+        function generateProgressReport() {
+            const classCode = document.getElementById('class_select_progress').value;
+            const studentRoll = document.getElementById('student_select_progress').value;
+            
+            if (!classCode || !studentRoll) {
+                alert('Please select both class and student');
+                return;
+            }
+            
+            console.log('Fetching report for:', classCode, studentRoll);
+            
+            fetch(`get_student_full_report.php?class_code=${encodeURIComponent(classCode)}&student_roll=${encodeURIComponent(studentRoll)}`)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.text();
+                })
+                .then(text => {
+                    console.log('Response text:', text);
+                    const data = JSON.parse(text);
+                    if(data.error) {
+                        alert('Error: ' + data.error);
+                        return;
+                    }
+                    currentReportData = data;
+                    displayProgressReport(data);
+                })
+                .catch(error => {
+                    console.error('Error details:', error);
+                    alert('Failed to fetch student report. Check console for details.');
+                });
+        }
+
+        function displayProgressReport(data) {
+            const container = document.getElementById('progress-results-container');
+            const attendancePercent = data.attendance.total_days > 0 ? 
+                ((data.attendance.present_days / data.attendance.total_days) * 100).toFixed(1) : 0;
+            
+            let html = `
+            <div class="results-card" id="report-content">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h2 style="color: var(--primary); margin-bottom: 10px;">${data.institute_name}</h2>
+                    <h3 style="color: var(--dark); margin-bottom: 20px;">Student Progress Report</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; text-align: left; background: var(--primary-light); padding: 20px; border-radius: 12px;">
+                        <div><strong>Name:</strong> ${data.student.student_name}</div>
+                        <div><strong>Roll No:</strong> ${data.student.student_roll_no}</div>
+                        <div><strong>Class:</strong> ${data.class_name}</div>
+                        <div><strong>Email:</strong> ${data.student.email || 'N/A'}</div>
+                    </div>
+                </div>
+
+                <div style="margin: 30px 0;">
+                    <h3 style="margin-bottom: 15px;">Attendance Overview</h3>
+                    <div style="max-width: 400px; margin: 0 auto;">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                    <div style="text-align: center; margin-top: 15px; font-size: 1.1rem;">
+                        <strong>Attendance: ${attendancePercent}%</strong> (${data.attendance.present_days}/${data.attendance.total_days} days)
+                    </div>
+                </div>
+
+                <div style="margin: 30px 0;">
+                    <h3 style="margin-bottom: 15px;">Exam-wise Marks</h3>
+                    <canvas id="marksBarChart"></canvas>
+                </div>
+
+                <div style="margin: 30px 0;">
+                    <h3 style="margin-bottom: 15px;">Performance Trend</h3>
+                    <canvas id="performanceLineChart"></canvas>
+                </div>
+
+                <div style="margin: 30px 0;">
+                    <h3 style="margin-bottom: 15px;">Class Standing</h3>
+                    <div style="max-width: 400px; margin: 0 auto;">
+                        <canvas id="standingChart"></canvas>
+                    </div>
+                    <div style="text-align: center; margin-top: 15px; font-size: 1.1rem;">
+                        <strong>Rank: ${data.rank} out of ${data.total_students} students</strong>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn-primary" onclick="downloadReport()"><i class="fas fa-download"></i> Download Report</button>
+                </div>
+            </div>
+            `;
+            
+            container.innerHTML = html;
+            
+            // Create charts
+            setTimeout(() => {
+                createAttendanceChart(data.attendance);
+                createMarksBarChart(data.exams);
+                createPerformanceLineChart(data.exams);
+                createStandingChart(data.rank, data.total_students);
+            }, 100);
+        }
+
+        function createAttendanceChart(attendance) {
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Present', 'Absent'],
+                    datasets: [{
+                        data: [attendance.present_days, attendance.absent_days],
+                        backgroundColor: ['#4361ee', '#ef476f']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        function createMarksBarChart(exams) {
+            const ctx = document.getElementById('marksBarChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: exams.map(e => e.exam_name),
+                    datasets: [{
+                        label: 'Marks Obtained',
+                        data: exams.map(e => e.actual_marks),
+                        backgroundColor: '#4361ee'
+                    }, {
+                        label: 'Total Marks',
+                        data: exams.map(e => e.total_marks),
+                        backgroundColor: '#e0e7ff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function createPerformanceLineChart(exams) {
+            const ctx = document.getElementById('performanceLineChart').getContext('2d');
+            const percentages = exams.map(e => ((e.actual_marks / e.total_marks) * 100).toFixed(2));
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: exams.map(e => e.exam_name),
+                    datasets: [{
+                        label: 'Performance (%)',
+                        data: percentages,
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, max: 100 }
+                    }
+                }
+            });
+        }
+
+        function createStandingChart(rank, total) {
+            const ctx = document.getElementById('standingChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Your Position', 'Other Students'],
+                    datasets: [{
+                        data: [1, total - 1],
+                        backgroundColor: ['#4361ee', '#e0e7ff']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        async function downloadReport() {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const content = document.getElementById('report-content');
+            
+            const canvas = await html2canvas(content, {
+                scale: 2,
+                useCORS: true,
+                logging: false
+            });
+            
+            const imgData = canvas.toDataURL('image/png');
+            const imgWidth = 190;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            
+            let heightLeft = imgHeight;
+            let position = 10;
+            
+            pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+            heightLeft -= 280;
+            
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight + 10;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                heightLeft -= 280;
+            }
+            
+            pdf.save(`${currentReportData.student.student_name}_Progress_Report.pdf`);
+        }
     </script>
 </body>
 </html>
