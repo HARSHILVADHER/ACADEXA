@@ -375,7 +375,7 @@ $conn->close();
         <!-- Individual Progress Report -->
         <div id="progress-report" class="report-section" style="display:none;">
             <div class="filter-card">
-                <h3>Select Student</h3>
+                <h3>Select Student & Date Range</h3>
                 <div class="filter-row">
                     <div class="input-group">
                         <label>Class</label>
@@ -394,6 +394,16 @@ $conn->close();
                         <select id="student_select_progress" class="input-field" required>
                             <option value="">Choose a student</option>
                         </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Start Date</label>
+                        <input type="date" id="start_date_progress" class="input-field" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>End Date</label>
+                        <input type="date" id="end_date_progress" class="input-field" required>
                     </div>
                     
                     <button type="button" class="btn-primary" onclick="generateProgressReport()">Generate Report</button>
@@ -516,21 +526,30 @@ $conn->close();
         function generateProgressReport() {
             const classCode = document.getElementById('class_select_progress').value;
             const studentRoll = document.getElementById('student_select_progress').value;
+            const startDate = document.getElementById('start_date_progress').value;
+            const endDate = document.getElementById('end_date_progress').value;
             
             if (!classCode || !studentRoll) {
                 alert('Please select both class and student');
                 return;
             }
             
-            console.log('Fetching report for:', classCode, studentRoll);
+            if (!startDate || !endDate) {
+                alert('Please select both start date and end date');
+                return;
+            }
             
-            fetch(`get_student_full_report.php?class_code=${encodeURIComponent(classCode)}&student_roll=${encodeURIComponent(studentRoll)}`)
-                .then(response => {
-                    console.log('Response status:', response.status);
-                    return response.text();
-                })
+            if (startDate > endDate) {
+                alert('Start date cannot be after end date');
+                return;
+            }
+            
+            let url = `get_student_full_report.php?class_code=${encodeURIComponent(classCode)}&student_roll=${encodeURIComponent(studentRoll)}`;
+            url += `&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`;
+            
+            fetch(url)
+                .then(response => response.text())
                 .then(text => {
-                    console.log('Response text:', text);
                     const data = JSON.parse(text);
                     if(data.error) {
                         alert('Error: ' + data.error);
@@ -552,7 +571,7 @@ $conn->close();
             
             let html = `
             <div class="results-card" id="report-content">
-                <div style="text-align: center; margin-bottom: 30px;">
+                <div class="pdf-section" style="text-align: center; margin-bottom: 30px; page-break-after: avoid;">
                     <h2 style="color: var(--primary); margin-bottom: 10px;">${data.institute_name}</h2>
                     <h3 style="color: var(--dark); margin-bottom: 20px;">Student Progress Report</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; text-align: left; background: var(--primary-light); padding: 20px; border-radius: 12px;">
@@ -563,29 +582,38 @@ $conn->close();
                     </div>
                 </div>
 
-                <div style="margin: 30px 0;">
+                <div class="pdf-section" style="margin: 30px 0; page-break-inside: avoid;">
                     <h3 style="margin-bottom: 15px;">Attendance Overview</h3>
-                    <div style="max-width: 400px; margin: 0 auto;">
-                        <canvas id="attendanceChart"></canvas>
-                    </div>
-                    <div style="text-align: center; margin-top: 15px; font-size: 1.1rem;">
-                        <strong>Attendance: ${attendancePercent}%</strong> (${data.attendance.present_days}/${data.attendance.total_days} days)
+                    <div style="display: flex; gap: 30px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                        <div style="max-width: 300px; min-width: 250px;">
+                            <canvas id="attendanceChart"></canvas>
+                        </div>
+                        <div style="text-align: left;">
+                            <div style="margin-bottom: 10px; font-size: 1rem;"><strong>Total Days:</strong> ${data.attendance.total_days}</div>
+                            <div style="margin-bottom: 10px; font-size: 1rem;"><strong>Total Present:</strong> ${data.attendance.present_days}</div>
+                            <div style="margin-bottom: 10px; font-size: 1rem;"><strong>Total Absent:</strong> ${data.attendance.absent_days}</div>
+                            <div style="margin-top: 15px; font-size: 1.2rem; color: var(--primary);"><strong>Attendance: ${attendancePercent}%</strong></div>
+                        </div>
                     </div>
                 </div>
 
-                <div style="margin: 30px 0;">
+                <div class="pdf-section" style="margin: 30px 0; page-break-inside: avoid;">
                     <h3 style="margin-bottom: 15px;">Exam-wise Marks</h3>
-                    <canvas id="marksBarChart"></canvas>
+                    <div style="height: 280px; position: relative;">
+                        <canvas id="marksBarChart"></canvas>
+                    </div>
                 </div>
 
-                <div style="margin: 30px 0;">
+                <div class="pdf-section" style="margin: 30px 0; page-break-inside: avoid;">
                     <h3 style="margin-bottom: 15px;">Performance Trend</h3>
-                    <canvas id="performanceLineChart"></canvas>
+                    <div style="height: 280px; position: relative;">
+                        <canvas id="performanceLineChart"></canvas>
+                    </div>
                 </div>
 
-                <div style="margin: 30px 0;">
+                <div class="pdf-section" style="margin: 30px 0; page-break-inside: avoid;">
                     <h3 style="margin-bottom: 15px;">Class Standing</h3>
-                    <div style="max-width: 400px; margin: 0 auto;">
+                    <div style="max-width: 300px; margin: 0 auto;">
                         <canvas id="standingChart"></canvas>
                     </div>
                     <div style="text-align: center; margin-top: 15px; font-size: 1.1rem;">
@@ -632,6 +660,9 @@ $conn->close();
 
         function createMarksBarChart(exams) {
             const ctx = document.getElementById('marksBarChart').getContext('2d');
+            const maxMarks = Math.max(...exams.map(e => e.total_marks), 100);
+            const yAxisMax = Math.ceil(maxMarks / 10) * 10;
+            
             new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -648,8 +679,18 @@ $conn->close();
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
-                        y: { beginAtZero: true }
+                        y: { 
+                            beginAtZero: true,
+                            max: yAxisMax,
+                            ticks: {
+                                stepSize: Math.ceil(yAxisMax / 10)
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' }
                     }
                 }
             });
@@ -674,8 +715,12 @@ $conn->close();
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
                         y: { beginAtZero: true, max: 100 }
+                    },
+                    plugins: {
+                        legend: { position: 'top' }
                     }
                 }
             });
@@ -704,29 +749,69 @@ $conn->close();
         async function downloadReport() {
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('p', 'mm', 'a4');
-            const content = document.getElementById('report-content');
+            const sections = document.querySelectorAll('.pdf-section');
             
-            const canvas = await html2canvas(content, {
-                scale: 2,
-                useCORS: true,
-                logging: false
-            });
+            let yOffset = 10;
+            const pageHeight = 280;
+            const pageWidth = 210;
+            const margin = 10;
+            const contentWidth = pageWidth - (2 * margin);
             
-            const imgData = canvas.toDataURL('image/png');
-            const imgWidth = 190;
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-            
-            let heightLeft = imgHeight;
-            let position = 10;
-            
-            pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-            heightLeft -= 280;
-            
-            while (heightLeft > 0) {
-                position = heightLeft - imgHeight + 10;
-                pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-                heightLeft -= 280;
+            for (let i = 0; i < sections.length; i++) {
+                const section = sections[i];
+                const canvas = await html2canvas(section, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff',
+                    windowWidth: section.scrollWidth,
+                    windowHeight: section.scrollHeight
+                });
+                
+                const imgData = canvas.toDataURL('image/png');
+                const imgHeight = (canvas.height * contentWidth) / canvas.width;
+                
+                // If section doesn't fit on current page, start new page
+                if (yOffset + imgHeight > pageHeight && yOffset > 10) {
+                    pdf.addPage();
+                    yOffset = 10;
+                }
+                
+                // If section is still too large for one page, split it
+                if (imgHeight > pageHeight - 20) {
+                    let srcY = 0;
+                    const srcHeight = canvas.height;
+                    const ratio = contentWidth / canvas.width;
+                    
+                    while (srcY < srcHeight) {
+                        const remainingPageHeight = pageHeight - yOffset;
+                        const canvasSliceHeight = remainingPageHeight / ratio;
+                        const actualSliceHeight = Math.min(canvasSliceHeight, srcHeight - srcY);
+                        const sliceImgHeight = actualSliceHeight * ratio;
+                        
+                        // Create a temporary canvas for the slice
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = canvas.width;
+                        tempCanvas.height = actualSliceHeight;
+                        const tempCtx = tempCanvas.getContext('2d');
+                        tempCtx.drawImage(canvas, 0, srcY, canvas.width, actualSliceHeight, 0, 0, canvas.width, actualSliceHeight);
+                        
+                        const sliceData = tempCanvas.toDataURL('image/png');
+                        pdf.addImage(sliceData, 'PNG', margin, yOffset, contentWidth, sliceImgHeight);
+                        
+                        srcY += actualSliceHeight;
+                        
+                        if (srcY < srcHeight) {
+                            pdf.addPage();
+                            yOffset = 10;
+                        } else {
+                            yOffset += sliceImgHeight + 5;
+                        }
+                    }
+                } else {
+                    pdf.addImage(imgData, 'PNG', margin, yOffset, contentWidth, imgHeight);
+                    yOffset += imgHeight + 5;
+                }
             }
             
             pdf.save(`${currentReportData.student.student_name}_Progress_Report.pdf`);

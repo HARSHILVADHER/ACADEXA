@@ -158,6 +158,12 @@ $conn->close();
       letter-spacing: -0.5px;
       background-clip: text;
     }
+    
+    .logo img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+    }
 
     nav {
       display: flex;

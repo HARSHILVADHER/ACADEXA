@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,6 +36,12 @@
       font-size: 1.5rem;
       font-weight: bold;
       color: #2563eb;
+    }
+    
+    .logo img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
     }
 
     nav {
@@ -216,15 +225,15 @@
     </style>
 </head>
 <body>
-    <header>
-    <div class="logo">Acadexa</div>
+  <header>
+    <?php include 'php/header_logo.php'; ?>
     <nav>
       <a href="php/dashboard.php">Home</a>
-      <a href="createclass.html" class="active">Classes</a>
+      <a href="createclass.html">Classes</a>
       <a href="attendance.html">Attendance</a>
       <a href="php/gradecard.php">Reports</a>
       <a href="php/inquiry.php">Inquiries</a>
-      <a href="php/profile.php">Settings</a>
+      <a href="php/profile.php">Profile</a>
     </nav>
   </header>
   <div class="exam-row" id="examContainer">

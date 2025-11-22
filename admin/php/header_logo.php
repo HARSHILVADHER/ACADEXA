@@ -20,7 +20,8 @@ try {
         
         if ($logo_data && !empty($logo_data['logo_path'])) {
             $logo_path = htmlspecialchars($logo_data['logo_path']);
-            $logo_html = '<div class="logo"><img src="../../' . $logo_path . '" alt="Logo"></div>';
+            $base_path = (basename(dirname($_SERVER['PHP_SELF'])) === 'php') ? '../../' : '../';
+            $logo_html = '<div class="logo"><img src="' . $base_path . $logo_path . '" alt="Logo"></div>';
         }
     }
 } catch (Exception $e) {

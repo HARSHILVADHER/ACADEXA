@@ -36,7 +36,7 @@ $errors = [];
 while (($data = fgetcsv($handle)) !== FALSE) {
     $rowNum = $imported + $skipped + 2;
     
-    if (count($data) < 8) {
+    if (count($data) < 9) {
         $errors[] = "Row $rowNum: Insufficient columns";
         $skipped++;
         continue;
@@ -51,10 +51,25 @@ while (($data = fgetcsv($handle)) !== FALSE) {
     $student_contact = trim($data[6]) ?: null;
     $email = trim($data[7]);
     $group_name = isset($data[8]) ? trim($data[8]) : null;
+    $date_of_joining_raw = isset($data[9]) ? trim($data[9]) : null;
     
     if (empty($group_name)) $group_name = null;
     
-    if (!$name || !$dob || !$medium || !$roll_no || !$std || !$parent_contact || !$email) {
+    // Convert date_of_joining to MySQL format (yyyy-mm-dd)
+    $date_of_joining = null;
+    if (!empty($date_of_joining_raw)) {
+        // Try multiple date formats
+        $date_formats = ['Y-m-d', 'd-m-Y', 'd/m/Y', 'm/d/Y', 'Y/m/d'];
+        foreach ($date_formats as $format) {
+            $date_obj = DateTime::createFromFormat($format, $date_of_joining_raw);
+            if ($date_obj !== false) {
+                $date_of_joining = $date_obj->format('Y-m-d');
+                break;
+            }
+        }
+    }
+    
+    if (!$name || !$dob || !$medium || !$roll_no || !$std || !$parent_contact || !$email || !$date_of_joining) {
         $errors[] = "Row $rowNum: Missing required fields";
         $skipped++;
         continue;
@@ -74,8 +89,8 @@ while (($data = fgetcsv($handle)) !== FALSE) {
     }
     $checkStmt->close();
     
-    $stmt = $conn->prepare("INSERT INTO students (name, dob, medium, roll_no, std, parent_contact, student_contact, email, class_code, group_name, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssssssssi", $name, $dob, $medium, $roll_no, $std, $parent_contact, $student_contact, $email, $classCode, $group_name, $user_id);
+    $stmt = $conn->prepare("INSERT INTO students (name, dob, medium, roll_no, std, parent_contact, student_contact, email, class_code, group_name, date_of_joining, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssssssssi", $name, $dob, $medium, $roll_no, $std, $parent_contact, $student_contact, $email, $classCode, $group_name, $date_of_joining, $user_id);
     
     if ($stmt->execute()) {
         $imported++;

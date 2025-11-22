@@ -1,10 +1,14 @@
+<?php
+session_start();
+require_once 'php/config.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Calendar</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     :root {
@@ -57,6 +61,17 @@
       -webkit-text-fill-color: transparent;
       letter-spacing: -0.5px;
       background-clip: text;
+    }
+    
+    .logo img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+    }
+    
+    .logo:has(img) {
+      background: none;
+      -webkit-text-fill-color: initial;
     }
     nav {
       display: flex;
@@ -543,8 +558,8 @@
   </style>
 </head>
 <body>
-    <header>
-    <div class="logo">Acadexa</div>
+  <header>
+    <?php include 'php/header_logo.php'; ?>
     <nav>
       <a href="php/dashboard.php" class="active">Home</a>
       <a href="createclass.html">Classes</a>
@@ -641,7 +656,7 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
   <script>
     var calendar;
 

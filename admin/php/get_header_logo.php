@@ -15,14 +15,16 @@ if($conn->connect_error) {
     exit;
 }
 
-$stmt = $conn->prepare("SELECT header_logo FROM users WHERE id = ?");
+$stmt = $conn->prepare("SELECT logo_path FROM user_logos WHERE user_id = ? ORDER BY uploaded_at DESC LIMIT 1");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
 if($result->num_rows > 0) {
     $row = $result->fetch_assoc();
-    echo json_encode(['logo' => $row['header_logo']]);
+    $logo_path = $row['logo_path'];
+    // Return path relative to admin folder (where HTML files are)
+    echo json_encode(['logo' => '../' . $logo_path]);
 } else {
     echo json_encode(['logo' => null]);
 }

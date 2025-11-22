@@ -137,6 +137,12 @@ $conn->close();
             letter-spacing: -0.5px;
         }
         
+        .logo img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+        
         nav {
             display: flex;
             gap: 15px;
@@ -713,6 +719,8 @@ $conn->close();
         .card-icon.roles { background: linear-gradient(135deg, #43e97b, #38f9d7); color: white; }
         .card-icon.income { background: linear-gradient(135deg, #fa709a, #fee140); color: white; }
         .card-icon.settings { background: linear-gradient(135deg, #a8edea, #fed6e3); color: var(--dark); }
+        .card-icon.idcard { background: linear-gradient(135deg, #ff6b6b, #ee5a6f); color: white; }
+        .card-icon.syllabus { background: linear-gradient(135deg, #4ecdc4, #44a08d); color: white; }
         
         .card-name {
             font-size: 1.2rem;
@@ -967,6 +975,24 @@ $conn->close();
                         </div>
                         <h3 class="card-name">System Settings</h3>
                         <p class="card-description">Configure system preferences, backup data, and security settings</p>
+                    </div>
+
+                    <!-- ID Card Generator -->
+                    <div class="management-card" onclick="window.location.href='id_card_generator.php'">
+                        <div class="card-icon idcard">
+                            <i class="fas fa-id-card"></i>
+                        </div>
+                        <h3 class="card-name">ID Card Generator</h3>
+                        <p class="card-description">Generate and print student and faculty ID cards with custom designs</p>
+                    </div>
+
+                    <!-- Syllabus Maker -->
+                    <div class="management-card" onclick="window.location.href='syllabus_maker.php'">
+                        <div class="card-icon syllabus">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <h3 class="card-name">Syllabus Maker</h3>
+                        <p class="card-description">Create and manage course syllabi, curriculum, and academic schedules</p>
                     </div>
                 </div>
             </div>

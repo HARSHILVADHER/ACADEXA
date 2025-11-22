@@ -22,18 +22,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param("ssssssss", $title, $code, $subject, $type, $description, $fileName, $fileType, $fileData);
 
             if ($stmt->execute()) {
-                echo "<script>alert('File uploaded successfully!'); window.location.href='studymaterial.html';</script>";
+                echo "<script>alert('File uploaded successfully!'); window.location.href='../studymaterial.php';</script>";
             } else {
-                echo "<script>alert('Database error'); window.location.href='studymaterial.html';</script>";
+                echo "<script>alert('Database error'); window.location.href='../studymaterial.php';</script>";
             }
             $stmt->close();
         } else {
-            echo "<script>alert('Database connection error'); window.location.href='studymaterial.html';</script>";
+            echo "<script>alert('Database connection error'); window.location.href='../studymaterial.php';</script>";
         }
     } else {
-        echo "<script>alert('File upload error'); window.location.href='studymaterial.html';</script>";
+        echo "<script>alert('File upload error'); window.location.href='../studymaterial.php';</script>";
     }
 } else {
-    echo "<script>alert('Invalid request'); window.location.href='studymaterial.html';</script>";
+    echo "<script>alert('Invalid request'); window.location.href='../studymaterial.php';</script>";
 }
 ?>

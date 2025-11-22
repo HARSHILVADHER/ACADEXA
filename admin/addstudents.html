@@ -56,6 +56,12 @@
       letter-spacing: -0.5px;
       background-clip: text;
     }
+    
+    .logo img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+    }
     nav {
       display: flex;
       gap: 15px;
@@ -277,11 +283,10 @@
 </head>
 <body>
   <header>
-    <div class="logo">Acadexa</div>
+    <div class="logo" id="headerLogo">Acadexa</div>
     <nav>
       <a href="php/dashboard.php">Home</a>
       <a href="createclass.html">Classes</a>
-      <a href="students.html" class="active">Students</a>
       <a href="attendance.html">Attendance</a>
       <a href="php/gradecard.php">Reports</a>
       <a href="php/inquiry.php">Inquiries</a>
@@ -389,6 +394,11 @@
             <label for="email">Email *</label>
             <input type="email" id="email" name="email" required>
           </div>
+          
+          <div class="form-group">
+            <label for="date_of_joining">Date of Joining *</label>
+            <input type="date" id="date_of_joining" name="date_of_joining" required>
+          </div>
         </div>
         
         <div class="btn-group">
@@ -415,6 +425,16 @@
     function getQueryParam(name) {
       const params = new URLSearchParams(window.location.search);
       return params.get(name);
+    }
+
+    // Format date to dd-mm-yyyy
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}-${month}-${year}`;
     }
 
     // Load classes for dropdown (returns Promise with classes array)
@@ -469,7 +489,7 @@
         return;
       }
       
-      fetch(`php/get_students_by_class.php?classCode=${encodeURIComponent(classCode)}&t=${Date.now()}`)
+      fetch(`php/get_students_by_class_code.php?classCode=${encodeURIComponent(classCode)}&t=${Date.now()}`)
         .then(response => response.json())
         .then(students => {
           console.log('Students loaded for class', classCode, ':', students);
@@ -486,7 +506,7 @@
               <div class="student-card">
                 <div class="student-name">${student.name}</div>
                 <div class="student-details">
-                  <span>Roll: ${student.roll_no} | Std: ${student.std}${student.group_name ? ' (' + student.group_name + ')' : ''}</span>
+                  <span>Roll: ${student.roll_no} | Joined: ${formatDate(student.date_of_joining)}</span>
                   <button class="student-badge" onclick="editStudent(${student.id})">View</button>
                 </div>
               </div>
@@ -673,8 +693,21 @@
       }
     }
 
+    // Load logo from database
+    function loadLogo() {
+      fetch('php/get_header_logo.php')
+        .then(res => res.json())
+        .then(data => {
+          if(data.logo) {
+            document.getElementById('headerLogo').innerHTML = `<img src="${data.logo}" alt="Logo">`;
+          }
+        })
+        .catch(error => console.error('Error loading logo:', error));
+    }
+
     // Load classes on page load and apply URL class if provided
     document.addEventListener('DOMContentLoaded', function() {
+      loadLogo();
       loadClasses().then(() => {
         applyUrlClassIfAny();
       });

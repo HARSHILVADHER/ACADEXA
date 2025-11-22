@@ -10,7 +10,7 @@ if (!$user_id) {
 
 $exam_id = $_GET['exam_id'] ?? null;
 if (!$exam_id) {
-    header('Location: all_exam.html');
+    header('Location: ../all_exam.php');
     exit();
 }
 
@@ -25,7 +25,7 @@ $exam = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if (!$exam) {
-    header('Location: all_exam.html');
+    header('Location: ../all_exam.php');
     exit();
 }
 
@@ -225,7 +225,7 @@ $conn->close();
     </header>
     
     <div class="container">
-        <a href="../all_exam.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Exams</a>
+        <a href="../all_exam.php" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Exams</a>
         
         <div class="exam-details">
             <h2><?php echo htmlspecialchars($exam['exam_name']); ?></h2>

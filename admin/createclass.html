@@ -60,6 +60,12 @@
       -webkit-text-fill-color: transparent;
       letter-spacing: -0.5px;
     }
+    
+    .logo img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+    }
 
     nav {
       display: flex;
@@ -510,7 +516,7 @@
 
 <body>
   <header>
-    <div class="logo">Acadexa</div>
+    <div class="logo" id="headerLogo">Acadexa</div>
     <nav>
       <a href="php/dashboard.php">Home</a>
       <a href="createclass.html" class="active">Classes</a>
@@ -577,6 +583,14 @@
   -->
 
   <script>
+    fetch('php/get_header_logo.php')
+      .then(res => res.json())
+      .then(data => {
+        if(data.logo) {
+          document.getElementById('headerLogo').innerHTML = `<img src="${data.logo}" alt="Logo">`;
+        }
+      });
+    
     let activeClassCode = null;
 
     // Initialize page with animations

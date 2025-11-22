@@ -1,3 +1,7 @@
+<?php
+session_start();
+require_once 'php/config.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,16 +60,14 @@
             font-weight: 800;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             -webkit-background-clip: text;
-            background-clip: text;
-            background-clip: text;
-            background-clip: text;
-            background-clip: text;
-            background-clip: text;
-            background-clip: text;
-            background-clip: text;
-            background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.5px;
+        }
+        
+        .logo img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
         }
 
         nav {
@@ -373,7 +375,7 @@
 </head>
 <body>
     <header>
-        <div class="logo">Acadexa</div>
+        <?php include 'php/header_logo.php'; ?>
         <nav>
             <a href="php/dashboard.php">Home</a>
             <a href="createclass.html">Classes</a>

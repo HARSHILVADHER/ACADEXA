@@ -18,6 +18,7 @@ while ($row = $result->fetch_assoc()) {
     $classes[] = $row;
 }
 $stmt->close();
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -76,6 +77,12 @@ $stmt->close();
           -webkit-text-fill-color: transparent;
           letter-spacing: -0.5px;
           background-clip: text;
+        }
+        
+        .logo img {
+          height: 40px;
+          width: auto;
+          object-fit: contain;
         }
         nav {
           display: flex;
@@ -211,7 +218,7 @@ $stmt->close();
 </head>
 <body>
   <header>
-    <div class="logo">Acadexa</div>
+    <?php include 'header_logo.php'; ?>
     <nav>
       <a href="dashboard.php">Home</a>
       <a href="../createclass.html" class="active">Classes</a>

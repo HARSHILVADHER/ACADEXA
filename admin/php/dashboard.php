@@ -314,6 +314,12 @@ if ($stmt) {
       -webkit-text-fill-color: transparent;
       letter-spacing: -0.5px;
     }
+    
+    .logo img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+    }
 
     nav {
       display: flex;
@@ -1294,7 +1300,7 @@ if ($stmt) {
         <div class="title">Create Your Task</div>
         <div class="desc">Create and maintain the daily task</div>
         <div class="btn-container">
-          <a href="../calendar.html" class="btn">Go to Tasks</a>
+          <a href="../calendar.php" class="btn">Go to Tasks</a>
         </div>
       </div>
 
@@ -1316,7 +1322,7 @@ if ($stmt) {
         <div class="title">Study Material</div>
         <div class="desc">Create student performance reports</div>
         <div class="btn-container">
-          <a href="../studymaterial.html" class="btn">Upload Materials</a>
+          <a href="../studymaterial.php" class="btn">Upload Materials</a>
         </div>
       </div>
 
@@ -1369,7 +1375,7 @@ if ($stmt) {
             <?php endforeach; ?>
           </ul>
           
-          <a href="../calendar.html" class="view-all-btn hover-underline">
+          <a href="../calendar.php" class="view-all-btn hover-underline">
             View All Tasks <i class="fas fa-arrow-right"></i>
           </a>
         </div>
@@ -1460,7 +1466,7 @@ if ($stmt) {
             <?php endforeach; ?>
           </ul>
           
-          <a href="../all_exam.html" class="view-all-btn hover-underline">
+          <a href="../all_exam.php" class="view-all-btn hover-underline">
             View All Exams <i class="fas fa-arrow-right"></i>
           </a>
         </div>

@@ -183,6 +183,12 @@ $conn->close();
             z-index: 100;
         }
         
+        .logo img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+        
         .logo {
             font-size: 1.8rem;
             font-weight: 800;

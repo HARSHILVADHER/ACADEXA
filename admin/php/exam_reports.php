@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -51,6 +54,12 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.5px;
+        }
+        
+        .logo img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
         }
         
         nav {
@@ -698,6 +707,29 @@
             transform: translateY(-2px);
         }
 
+        .rank-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .rank-1 {
+            background: #ffd700;
+            color: #000;
+        }
+        
+        .rank-2 {
+            background: #c0c0c0;
+            color: #000;
+        }
+        
+        .rank-3 {
+            background: #cd7f32;
+            color: #fff;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
@@ -723,7 +755,7 @@
 </head>
 <body>
     <header>
-        <div class="logo">Acadexa</div>
+        <?php include 'header_logo.php'; ?>
         <nav>
             <a href="dashboard.php">Home</a>
             <a href="../createclass.html">Classes</a>
@@ -736,60 +768,103 @@
 
     <div class="container">
         <div class="page-header">
-            <h1 class="page-title">Exam Report</h1>
-            <p class="page-subtitle">Student performance analysis with marks and grade distribution</p>
+            <h1 class="page-title">Student Analysis</h1>
+            <p class="page-subtitle">Complete student analysis with performance, marks, grade distribution, personal details, classes, and contact information</p>
         </div>
 
         <div class="report-tabs">
-            <button class="tab-btn active" onclick="switchTab('exam')">Exam Report</button>
-            <button class="tab-btn" onclick="switchTab('classwise')">Classwise</button>
-            <button class="tab-btn" onclick="switchTab('institute')">Institute wise</button>
+            <button class="tab-btn active" onclick="switchTab('student')">Individual Student Report</button>
+            <button class="tab-btn" onclick="switchTab('exammarks')">Exam Marks Report</button>
+            <button class="tab-btn" onclick="switchTab('subjectwise')">Subject Wise Exam Report</button>
+            <button class="tab-btn" onclick="switchTab('institute')">See Your Top Students</button>
         </div>
 
-        <!-- Exam Report Tab -->
-        <div id="exam-report" class="report-section">
+        <!-- Student Report Tab -->
+        <div id="student-report" class="report-section">
             <div class="filter-card">
-                <h3>Search Exam</h3>
-                <div class="filter-row">
-                    <div class="input-group">
-                        <label>Exam Name</label>
-                        <input type="text" id="exam-search" class="input-field" placeholder="Enter exam name">
-                    </div>
-                    <button class="btn-primary" onclick="searchExam()"><i class="fas fa-search"></i> Search</button>
-                </div>
-            </div>
-
-            <div id="exam-data" class="data-section" style="display:none;">
-                <div id="exam-details-container"></div>
-            </div>
-        </div>
-
-        <!-- Classwise Tab -->
-        <div id="classwise-report" class="report-section" style="display:none;">
-            <div class="filter-card">
-                <h3>Select Class</h3>
+                <h3>Select Student</h3>
                 <div class="filter-row">
                     <div class="input-group">
                         <label>Class</label>
-                        <select id="class-select" class="input-field" onchange="loadClassExams()">
+                        <select id="class_select_progress" class="input-field" required>
+                            <option value="">Choose a class</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Student</label>
+                        <select id="student_select_progress" class="input-field" required>
+                            <option value="">Choose a student</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Start Date</label>
+                        <input type="date" id="start_date_progress" class="input-field" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>End Date</label>
+                        <input type="date" id="end_date_progress" class="input-field" required>
+                    </div>
+                    
+                    <button type="button" class="btn-primary" onclick="generateProgressReport()">Generate Report</button>
+                </div>
+            </div>
+            
+            <div id="progress-results-container"></div>
+        </div>
+
+        <!-- Exam Marks Report Tab -->
+        <div id="exammarks-report" class="report-section" style="display:none;">
+            <div class="filter-card">
+                <h3>Select Filters</h3>
+                <div class="filter-row">
+                    <div class="input-group">
+                        <label>Class</label>
+                        <select id="class_select_marks" class="input-field" required>
+                            <option value="">Choose a class</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Exam</label>
+                        <select id="exam_select_marks" class="input-field" required>
+                            <option value="">Choose an exam</option>
+                        </select>
+                    </div>
+                    
+                    <button type="button" class="btn-primary" onclick="generateMarksReport()">Generate Report</button>
+                </div>
+            </div>
+            
+            <div id="marks-results-container"></div>
+        </div>
+
+        <!-- Subject Wise Exam Report Tab -->
+        <div id="subjectwise-report" class="report-section" style="display:none;">
+            <div class="filter-card">
+                <h3>Select Filters</h3>
+                <div class="filter-row">
+                    <div class="input-group">
+                        <label>Class</label>
+                        <select id="subject-class-select" class="input-field" onchange="loadSubjectsByClass()">
                             <option value="">Select Class</option>
                         </select>
                     </div>
+                    
+                    <div class="input-group">
+                        <label>Subject</label>
+                        <select id="subject-select" class="input-field">
+                            <option value="">Select Subject</option>
+                        </select>
+                    </div>
+                    
+                    <button type="button" class="btn-primary" onclick="generateSubjectReport()">Generate Report</button>
                 </div>
             </div>
 
-            <div id="class-exams-container" style="display:none;">
-                <div class="data-section">
-                    <h3 style="margin-bottom: 20px;">Exams for Selected Class</h3>
-                    <div id="class-exams-list"></div>
-                </div>
-            </div>
-
-            <div id="class-exam-details" style="display:none;">
-                <div class="data-section">
-                    <div id="class-exam-details-container"></div>
-                </div>
-            </div>
+            <div id="subject-report-container"></div>
         </div>
 
         <!-- Institute wise Tab -->
@@ -933,204 +1008,90 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         let topStudentsData = [];
 
         function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.report-tabs > .tab-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
-            document.getElementById('exam-report').style.display = 'none';
-            document.getElementById('classwise-report').style.display = 'none';
+            document.getElementById('student-report').style.display = 'none';
+            document.getElementById('exammarks-report').style.display = 'none';
+            document.getElementById('subjectwise-report').style.display = 'none';
             document.getElementById('institute-report').style.display = 'none';
             
-            if(tab === 'exam') {
-                document.getElementById('exam-report').style.display = 'block';
-            } else if(tab === 'classwise') {
-                document.getElementById('classwise-report').style.display = 'block';
-                loadClasses();
+            if(tab === 'student') {
+                document.getElementById('student-report').style.display = 'block';
+                loadStudentReportClasses();
+            } else if(tab === 'exammarks') {
+                document.getElementById('exammarks-report').style.display = 'block';
+                loadExamMarksClasses();
+            } else if(tab === 'subjectwise') {
+                document.getElementById('subjectwise-report').style.display = 'block';
+                loadSubjectWiseClasses();
             } else if(tab === 'institute') {
                 document.getElementById('institute-report').style.display = 'block';
                 loadInstituteData();
             }
         }
 
-        function searchExam() {
-            const examName = document.getElementById('exam-search').value.trim();
-            
-            if(!examName) {
-                alert('Please enter exam name');
-                return;
-            }
 
-            fetch('get_exam_details.php', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                body: `exam_name=${encodeURIComponent(examName)}`
-            })
-            .then(res => {
-                if(!res.ok) throw new Error('Network error');
-                return res.json();
-            })
-            .then(data => {
-                displayExamDetails(data);
-                document.getElementById('exam-data').style.display = 'block';
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Error fetching exam details');
-            });
-        }
 
-        function displayExamDetails(exams) {
-            const container = document.getElementById('exam-details-container');
-            container.innerHTML = '';
-            
-            if(!Array.isArray(exams) || exams.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color: var(--gray);">No exams found</p>';
-                return;
-            }
-            
-            container.innerHTML = '<h3 style="margin-bottom: 20px;">Search Results</h3>';
-            exams.forEach(exam => {
-                const viewButton = exam.has_marks ? 
-                    `<button class="btn-view" onclick="showPerformanceModal(${exam.id}, '${exam.exam_name}')">View</button>` : '';
-                
-                container.innerHTML += `
-                    <div class="exam-card">
-                        <h4>${exam.exam_name}</h4>
-                        <p><i class="fas fa-school"></i> Class: ${exam.class_name} (${exam.code})</p>
-                        <p><i class="fas fa-calendar"></i> Date: ${exam.exam_date}</p>
-                        <p><i class="fas fa-clock"></i> Time: ${exam.start_time} - ${exam.end_time}</p>
-                        <p><i class="fas fa-star"></i> Total Marks: ${exam.total_marks} | Passing: ${exam.passing_marks}</p>
-                        ${viewButton}
-                    </div>
-                `;
-            });
-        }
-
-        function loadClasses() {
+        function loadSubjectWiseClasses() {
             fetch('get_classes.php')
-                .then(res => {
-                    if(!res.ok) throw new Error('Network error');
-                    return res.json();
-                })
+                .then(res => res.json())
                 .then(data => {
-                    const select = document.getElementById('class-select');
+                    const select = document.getElementById('subject-class-select');
                     select.innerHTML = '<option value="">Select Class</option>';
                     data.forEach(cls => {
                         select.innerHTML += `<option value="${cls.code}">${cls.name} (${cls.code})</option>`;
                     });
                 })
-                .catch(err => {
-                    console.error('Error:', err);
-                });
+                .catch(err => console.error('Error:', err));
         }
 
-        function loadClassExams() {
-            const classCode = document.getElementById('class-select').value;
+        function loadSubjectsByClass() {
+            const classCode = document.getElementById('subject-class-select').value;
+            const subjectSelect = document.getElementById('subject-select');
             
-            if(!classCode) {
-                document.getElementById('class-exams-container').style.display = 'none';
-                return;
-            }
-
-            fetch('get_class_exams.php', {
+            subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+            document.getElementById('subject-report-container').innerHTML = '';
+            
+            if(!classCode) return;
+            
+            fetch('get_subjects_by_class.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: `class_code=${classCode}`
             })
-            .then(res => {
-                if(!res.ok) throw new Error('Network error');
-                return res.json();
-            })
+            .then(res => res.json())
             .then(data => {
-                const container = document.getElementById('class-exams-list');
-                container.innerHTML = '';
-                
                 if(data.length === 0) {
-                    container.innerHTML = '<p style="text-align:center; color: var(--gray);">No exams found for this class</p>';
+                    subjectSelect.innerHTML = '<option value="">No subjects found</option>';
                 } else {
-                    data.forEach(exam => {
-                        const viewButton = exam.has_marks ? 
-                            `<button class="btn-view" onclick="showPerformanceModal(${exam.id}, '${exam.exam_name}')">View</button>` : '';
-                        
-                        container.innerHTML += `
-                            <div class="exam-card">
-                                <h4>${exam.exam_name}</h4>
-                                <p><i class="fas fa-calendar"></i> Date: ${exam.exam_date}</p>
-                                <p><i class="fas fa-clock"></i> Time: ${exam.start_time} - ${exam.end_time}</p>
-                                <p><i class="fas fa-star"></i> Total Marks: ${exam.total_marks} | Passing: ${exam.passing_marks}</p>
-                                ${viewButton}
-                            </div>
-                        `;
+                    data.forEach(subject => {
+                        subjectSelect.innerHTML += `<option value="${subject.id}">${subject.name}</option>`;
                     });
                 }
-                
-                document.getElementById('class-exams-container').style.display = 'block';
-                document.getElementById('class-exam-details').style.display = 'none';
             })
             .catch(err => {
                 console.error('Error:', err);
-                alert('Failed to load exams');
+                alert('Failed to load subjects');
             });
         }
 
-        function showClassExamDetails(examId) {
-            fetch('get_exam_details.php', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                body: `exam_id=${examId}`
-            })
-            .then(res => {
-                if(!res.ok) throw new Error('Network error');
-                return res.json();
-            })
-            .then(data => {
-                if(data.error) {
-                    alert(data.error);
-                    return;
-                }
-                
-                const container = document.getElementById('class-exam-details-container');
-                container.innerHTML = `
-                    <div class="exam-details">
-                        <h3>${data.exam_name}</h3>
-                        <div class="detail-grid">
-                            <div class="detail-item">
-                                <span class="detail-label">Class</span>
-                                <span class="detail-value">${data.class_name} (${data.code})</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Exam Date</span>
-                                <span class="detail-value">${data.exam_date}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Start Time</span>
-                                <span class="detail-value">${data.start_time}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">End Time</span>
-                                <span class="detail-value">${data.end_time}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Total Marks</span>
-                                <span class="detail-value">${data.total_marks}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Passing Marks</span>
-                                <span class="detail-value">${data.passing_marks}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                document.getElementById('class-exam-details').style.display = 'block';
-            })
-            .catch(err => {
-                console.error('Error:', err);
-                alert('Failed to load exam details');
-            });
+        function generateSubjectReport() {
+            const classCode = document.getElementById('subject-class-select').value;
+            const subjectId = document.getElementById('subject-select').value;
+            
+            if(!classCode || !subjectId) {
+                alert('Please select both class and subject');
+                return;
+            }
+            
+            // Backend processing will be added here
+            document.getElementById('subject-report-container').innerHTML = '<div class="data-section"><p style="text-align:center; color: var(--gray); padding: 40px;">Report generation in progress...</p></div>';
         }
 
         function loadInstituteData() {
@@ -1544,6 +1505,339 @@
             });
         }
         
+        let currentReportData = null;
+
+        function loadStudentReportClasses() {
+            fetch('get_classes.php')
+                .then(res => res.json())
+                .then(data => {
+                    const progressSelect = document.getElementById('class_select_progress');
+                    progressSelect.innerHTML = '<option value="">Choose a class</option>';
+                    
+                    data.forEach(cls => {
+                        progressSelect.innerHTML += `<option value="${cls.code}">${cls.name} (${cls.code})</option>`;
+                    });
+                })
+                .catch(err => console.error('Error:', err));
+        }
+
+        function loadExamMarksClasses() {
+            fetch('get_classes.php')
+                .then(res => res.json())
+                .then(data => {
+                    const marksSelect = document.getElementById('class_select_marks');
+                    marksSelect.innerHTML = '<option value="">Choose a class</option>';
+                    
+                    data.forEach(cls => {
+                        marksSelect.innerHTML += `<option value="${cls.code}">${cls.name} (${cls.code})</option>`;
+                    });
+                })
+                .catch(err => console.error('Error:', err));
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load classes for the default active tab (Individual Student Report)
+            loadStudentReportClasses();
+            
+            const classSelectMarks = document.getElementById('class_select_marks');
+            if(classSelectMarks) {
+                classSelectMarks.addEventListener('change', function() {
+                    const classCode = this.value;
+                    const examSelect = document.getElementById('exam_select_marks');
+                    examSelect.innerHTML = '<option value="">Choose an exam</option>';
+                    document.getElementById('marks-results-container').innerHTML = '';
+                    
+                    if (classCode) {
+                        fetch(`get_exams_by_class.php?class_code=${encodeURIComponent(classCode)}`)
+                            .then(response => response.json())
+                            .then(exams => {
+                                exams.forEach(exam => {
+                                    const option = document.createElement('option');
+                                    option.value = exam.id;
+                                    option.textContent = exam.exam_name;
+                                    examSelect.appendChild(option);
+                                });
+                            });
+                    }
+                });
+            }
+
+            const classSelectProgress = document.getElementById('class_select_progress');
+            if(classSelectProgress) {
+                classSelectProgress.addEventListener('change', function() {
+                    const classCode = this.value;
+                    const studentSelect = document.getElementById('student_select_progress');
+                    studentSelect.innerHTML = '<option value="">Choose a student</option>';
+                    document.getElementById('progress-results-container').innerHTML = '';
+                    
+                    if (classCode) {
+                        fetch(`get_students_by_class.php?class_code=${encodeURIComponent(classCode)}`)
+                            .then(response => response.json())
+                            .then(students => {
+                                students.forEach(student => {
+                                    const option = document.createElement('option');
+                                    option.value = student.id;
+                                    option.textContent = student.name;
+                                    studentSelect.appendChild(option);
+                                });
+                            });
+                    }
+                });
+            }
+        });
+
+        function generateMarksReport() {
+            const classCode = document.getElementById('class_select_marks').value;
+            const examId = document.getElementById('exam_select_marks').value;
+            
+            if (!classCode || !examId) {
+                alert('Please select both class and exam');
+                return;
+            }
+            
+            fetch(`get_exam_marks.php?exam_id=${examId}`)
+                .then(response => response.json())
+                .then(marks => {
+                    const container = document.getElementById('marks-results-container');
+                    
+                    if (marks.length > 0) {
+                        let html = '<div class="data-section"><h3>Student Marks Report</h3><table class="report-table"><thead><tr><th>Rank</th><th>Student Name</th><th>Roll No</th><th>Marks Obtained</th><th>Total Marks</th><th>Percentage</th></tr></thead><tbody>';
+                        
+                        marks.forEach((row, index) => {
+                            const rank = index + 1;
+                            const percentage = row.total_marks > 0 ? ((row.actual_marks / row.total_marks) * 100).toFixed(2) : 0;
+                            const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : rank;
+                            
+                            html += `<tr>
+                                <td>${rankBadge}</td>
+                                <td>${row.student_name}</td>
+                                <td>${row.student_roll_no}</td>
+                                <td>${row.actual_marks}</td>
+                                <td>${row.total_marks}</td>
+                                <td>${percentage}%</td>
+                            </tr>`;
+                        });
+                        
+                        html += '</tbody></table></div>';
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = '<div class="data-section"><p style="text-align:center; color: var(--gray); padding: 40px;">No marks data found.</p></div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to fetch report data');
+                });
+        }
+
+        function generateProgressReport() {
+            const classCode = document.getElementById('class_select_progress').value;
+            const studentRoll = document.getElementById('student_select_progress').value;
+            const startDate = document.getElementById('start_date_progress').value;
+            const endDate = document.getElementById('end_date_progress').value;
+            
+            if (!classCode || !studentRoll) {
+                alert('Please select both class and student');
+                return;
+            }
+            
+            if (!startDate || !endDate) {
+                alert('Please select both start date and end date');
+                return;
+            }
+            
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('Start date cannot be after end date');
+                return;
+            }
+            
+            fetch(`get_student_full_report.php?class_code=${encodeURIComponent(classCode)}&student_roll=${encodeURIComponent(studentRoll)}&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if(data.error) {
+                        alert('Error: ' + data.error);
+                        return;
+                    }
+                    currentReportData = data;
+                    displayProgressReport(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to fetch student report');
+                });
+        }
+
+        function displayProgressReport(data) {
+            const container = document.getElementById('progress-results-container');
+            const attendancePercent = data.attendance.total_days > 0 ? 
+                ((data.attendance.present_days / data.attendance.total_days) * 100).toFixed(1) : 0;
+            
+            let html = `
+            <div class="data-section" id="report-content">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h2 style="color: var(--primary); margin-bottom: 10px;">${data.institute_name}</h2>
+                    <h3 style="color: var(--dark); margin-bottom: 20px;">Student Progress Report</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; text-align: left; background: var(--primary-light); padding: 20px; border-radius: 12px;">
+                        <div><strong>Name:</strong> ${data.student.student_name}</div>
+                        <div><strong>Roll No:</strong> ${data.student.student_roll_no}</div>
+                        <div><strong>Class:</strong> ${data.class_name}</div>
+                        <div><strong>Email:</strong> ${data.student.email || 'N/A'}</div>
+                    </div>
+                </div>
+
+                <div style="margin: 30px 0;">
+                    <h3 style="margin-bottom: 15px;">Attendance Overview</h3>
+                    <div style="max-width: 400px; margin: 0 auto;">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                    <div style="text-align: center; margin-top: 15px; font-size: 1.1rem;">
+                        <strong>Attendance: ${attendancePercent}%</strong> (${data.attendance.present_days}/${data.attendance.total_days} days)
+                    </div>
+                </div>
+
+                <div style="margin: 30px 0;">
+                    <h3 style="margin-bottom: 15px;">Exam-wise Marks</h3>
+                    <canvas id="marksBarChart"></canvas>
+                </div>
+
+                <div style="margin: 30px 0;">
+                    <h3 style="margin-bottom: 15px;">Performance Trend</h3>
+                    <canvas id="performanceLineChart"></canvas>
+                </div>
+
+                <div style="margin: 30px 0;">
+                    <h3 style="margin-bottom: 15px;">Class Standing</h3>
+                    <div style="max-width: 400px; margin: 0 auto;">
+                        <canvas id="standingChart"></canvas>
+                    </div>
+                    <div style="text-align: center; margin-top: 15px; font-size: 1.1rem;">
+                        <strong>Rank: ${data.rank} out of ${data.total_students} students</strong>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn-primary" onclick="downloadProgressReport()"><i class="fas fa-download"></i> Download Report</button>
+                </div>
+            </div>
+            `;
+            
+            container.innerHTML = html;
+            
+            setTimeout(() => {
+                createAttendanceChart(data.attendance);
+                createMarksBarChart(data.exams);
+                createPerformanceLineChart(data.exams);
+                createStandingChart(data.rank, data.total_students);
+            }, 100);
+        }
+
+        function createAttendanceChart(attendance) {
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Present', 'Absent'],
+                    datasets: [{
+                        data: [attendance.present_days, attendance.absent_days],
+                        backgroundColor: ['#4361ee', '#ef476f']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function createMarksBarChart(exams) {
+            const ctx = document.getElementById('marksBarChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: exams.map(e => e.exam_name),
+                    datasets: [{
+                        label: 'Marks Obtained',
+                        data: exams.map(e => e.actual_marks),
+                        backgroundColor: '#4361ee'
+                    }, {
+                        label: 'Total Marks',
+                        data: exams.map(e => e.total_marks),
+                        backgroundColor: '#e0e7ff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function createPerformanceLineChart(exams) {
+            const ctx = document.getElementById('performanceLineChart').getContext('2d');
+            const percentages = exams.map(e => ((e.actual_marks / e.total_marks) * 100).toFixed(2));
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: exams.map(e => e.exam_name),
+                    datasets: [{
+                        label: 'Performance (%)',
+                        data: percentages,
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true, max: 100 } }
+                }
+            });
+        }
+
+        function createStandingChart(rank, total) {
+            const ctx = document.getElementById('standingChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Your Position', 'Other Students'],
+                    datasets: [{
+                        data: [1, total - 1],
+                        backgroundColor: ['#4361ee', '#e0e7ff']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        async function downloadProgressReport() {
+            const content = document.getElementById('report-content');
+            const canvas = await html2canvas(content, { scale: 2, useCORS: true, logging: false });
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 190;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 10;
+            
+            pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+            heightLeft -= 280;
+            
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight + 10;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                heightLeft -= 280;
+            }
+            
+            pdf.save(`${currentReportData.student.student_name}_Progress_Report.pdf`);
+        }
+
         window.onclick = function(event) {
             const modal = document.getElementById('performanceModal');
             if (event.target == modal) {

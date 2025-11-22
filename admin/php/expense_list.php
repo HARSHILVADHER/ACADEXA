@@ -14,6 +14,13 @@ $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $expense_records = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
+
+$stmt = $conn->prepare("SELECT SUM(amount) as total FROM expense WHERE user_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$total_expense = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
+$stmt->close();
+
 $conn->close();
 ?>
 <!DOCTYPE html>
@@ -122,6 +129,16 @@ $conn->close();
             align-items: center;
         }
         
+        .total-display {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+        
         .row-selector {
             display: flex;
             align-items: center;
@@ -179,6 +196,9 @@ $conn->close();
         <div class="toolbar">
             <h2>Expense Records</h2>
             <div class="toolbar-right">
+                <div class="total-display">
+                    Total: ₹<?php echo number_format($total_expense, 2); ?>
+                </div>
                 <div class="row-selector">
                     <label>Rows:</label>
                     <select id="rowSelector" onchange="updateRows()">

@@ -77,6 +77,12 @@ $conn->close();
             letter-spacing: -0.5px;
         }
         
+        .logo img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+        
         nav {
             display: flex;
             gap: 15px;
@@ -262,7 +268,7 @@ $conn->close();
 </head>
 <body>
     <header>
-        <div class="logo">Acadexa</div>
+        <?php include 'header_logo.php'; ?>
         <nav>
             <a href="dashboard.php">Home</a>
             <a href="../createclass.html">Classes</a>

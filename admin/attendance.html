@@ -61,6 +61,12 @@
       letter-spacing: -0.5px;
       background-clip: text;
     }
+    
+    .logo img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+    }
 
     nav {
       display: flex;
@@ -521,7 +527,7 @@
 
 <body>
   <header>
-    <div class="logo">Acadexa</div>
+    <div class="logo" id="headerLogo">Acadexa</div>
     <nav>
       <a href="php/dashboard.php">Home</a>
       <a href="createclass.html">Classes</a>
@@ -581,6 +587,14 @@
   </div>
 
   <script>
+    fetch('php/get_header_logo.php')
+      .then(res => res.json())
+      .then(data => {
+        if(data.logo) {
+          document.getElementById('headerLogo').innerHTML = `<img src="${data.logo}" alt="Logo">`;
+        }
+      });
+    
     const classList = document.getElementById('classList');
 const studentList = document.getElementById('studentList');
 const actionBar = document.getElementById('actionBar');

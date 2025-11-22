@@ -65,6 +65,12 @@ $conn->close();
             letter-spacing: -0.5px;
         }
         
+        .logo img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+        
         nav {
             display: flex;
             gap: 15px;
@@ -222,11 +228,11 @@ $conn->close();
         <div class="reports-grid">
             <div class="report-card">
                 <div class="report-icon">
-                    <i class="fas fa-user-graduate"></i>
+                    <i class="fas fa-chart-line"></i>
                 </div>
-                <h3 class="report-title">Student Report</h3>
-                <p class="report-desc">Complete list of all students with their details, classes, and contact information</p>
-                <a href="student_reports.php" class="download-btn">
+                <h3 class="report-title">Student Analysis</h3>
+                <p class="report-desc">Complete student analysis with performance, marks, grade distribution, personal details, classes, and contact information</p>
+                <a href="exam_reports.php" class="download-btn">
                     <i class="fas fa-download"></i>
                     Download Report
                 </a>
@@ -251,18 +257,6 @@ $conn->close();
                 <h3 class="report-title">Fees Report</h3>
                 <p class="report-desc">Complete fees collection report with pending and paid installments</p>
                 <a href="fees_reports.php" class="download-btn">
-                    <i class="fas fa-download"></i>
-                    Download Report
-                </a>
-            </div>
-
-            <div class="report-card">
-                <div class="report-icon">
-                    <i class="fas fa-clipboard-list"></i>
-                </div>
-                <h3 class="report-title">Exam Report</h3>
-                <p class="report-desc">Student performance analysis with marks and grade distribution</p>
-                <a href="exam_reports.php" class="download-btn">
                     <i class="fas fa-download"></i>
                     Download Report
                 </a>
