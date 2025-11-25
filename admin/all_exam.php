@@ -63,56 +63,139 @@ session_start();
       color: #2563eb;
     }
 
-    .exam-row {
+    .search-filter-bar {
       display: flex;
-      gap: 20px;
-      overflow-x: auto;
+      align-items: center;
+      gap: 15px;
+      padding: 20px 40px;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .search-box {
+      flex: 1;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 10px 40px 10px 15px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: border-color 0.3s;
+    }
+    .search-box input:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+    .search-box i {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .filter-group label {
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.95rem;
+    }
+    .filter-group select {
+      padding: 10px 15px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: white;
+      cursor: pointer;
+      min-width: 150px;
+      transition: border-color 0.3s;
+    }
+    .filter-group select:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+
+    .exam-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 24px;
       padding: 30px 40px;
-      margin-top: 30px;
+    }
+
+    @media (max-width: 1600px) {
+      .exam-row { grid-template-columns: repeat(4, 1fr); }
+    }
+    @media (max-width: 1200px) {
+      .exam-row { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 900px) {
+      .exam-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .exam-row { grid-template-columns: 1fr; }
     }
 
     .exam-card {
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 4px 16px rgba(66,141,242,0.10);
-      min-width: 270px;
-      max-width: 300px;
-      padding: 24px 20px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      padding: 24px;
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      transition: box-shadow 0.2s;
+      transition: all 0.3s ease;
       position: relative;
+      border: 2px solid #2563eb;
     }
     .exam-card:hover {
-      box-shadow: 0 8px 24px rgba(66,141,242,0.18);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(37, 99, 235, 0.15);
+      border-color: #1d4ed8;
     }
     .exam-title {
-      font-size: 1.2rem;
+      font-size: 1.25rem;
       font-weight: 700;
       color: #2563eb;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
     .exam-class {
-      font-size: 1rem;
+      font-size: 0.95rem;
+      color: #2563eb;
+      margin-bottom: 16px;
+      padding: 6px 12px;
+      background: #e0e7ff;
+      border-radius: 6px;
+      display: inline-block;
+    }
+    .exam-info {
+      font-size: 0.9rem;
       color: #374151;
       margin-bottom: 8px;
     }
-    .exam-info {
-      font-size: 0.97rem;
-      color: #444;
-      margin-bottom: 4px;
+    .exam-info strong {
+      color: #1f2937;
     }
     .exam-notes {
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       color: #6b7280;
-      margin-top: 10px;
+      margin-top: 12px;
+      padding: 12px;
+      background: #f3f4f6;
+      border-radius: 6px;
+      border-left: 3px solid #2563eb;
     }
     .no-exams {
+      grid-column: 1 / -1;
       text-align: center;
       color: #6b7280;
-      padding: 40px 0;
+      padding: 60px 20px;
       font-size: 1.1rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
     
     /* Modal Styles */
@@ -236,6 +319,26 @@ session_start();
       <a href="php/profile.php">Profile</a>
     </nav>
   </header>
+  
+  <div class="search-filter-bar">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search exams by name...">
+      <i class="fas fa-search"></i>
+    </div>
+    <div class="filter-group">
+      <label>Class:</label>
+      <select id="classFilter">
+        <option value="">All Classes</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Date:</label>
+      <select id="dateFilter">
+        <option value="">All Dates</option>
+      </select>
+    </div>
+  </div>
+  
   <div class="exam-row" id="examContainer">
     <div class="no-exams">Loading exams...</div>
   </div>
@@ -283,48 +386,23 @@ session_start();
     </div>
   </div>
   <script>
+let allExams = [];
+
 function loadExams() {
   fetch('php/get_all_exams.php')
     .then(response => response.text())
     .then(text => {
       try {
         const exams = JSON.parse(text);
-        const container = document.getElementById('examContainer');
         
         if (exams.error) {
-          container.innerHTML = '<div class="no-exams">Error loading exams</div>';
+          document.getElementById('examContainer').innerHTML = '<div class="no-exams">Error loading exams</div>';
           return;
         }
         
-        if (exams.length === 0) {
-          container.innerHTML = '<div class="no-exams">No exams found.</div>';
-          return;
-        }
-        
-        container.innerHTML = '';
-        exams.forEach(exam => {
-          const examCard = document.createElement('div');
-          examCard.className = 'exam-card';
-          examCard.style.position = 'relative';
-          
-          examCard.innerHTML = `
-            <div class="exam-title">${exam.exam_name}</div>
-            <div class="exam-class">Class: ${exam.class_name}</div>
-            <div class="exam-info"><strong>Date:</strong> ${exam.exam_date}</div>
-            <div class="exam-info"><strong>Time:</strong> ${exam.start_time} - ${exam.end_time}</div>
-            <div class="exam-info"><strong>Total Marks:</strong> ${exam.total_marks}</div>
-            <div class="exam-info"><strong>Passing Marks:</strong> ${exam.passing_marks}</div>
-            ${exam.notes ? `<div class="exam-notes"><strong>Notes:</strong> ${exam.notes}</div>` : ''}
-            <button class="edit-btn" onclick="openEditModal(${exam.id}, '${exam.exam_name}', '${exam.class_name}', '${exam.class_code}', '${exam.exam_date}', '${exam.start_time}', '${exam.end_time}', ${exam.total_marks}, ${exam.passing_marks})" title="Edit Exam" style="position:absolute;bottom:12px;right:52px;background:none;border:none;cursor:pointer;">
-              <i class="fa-regular fa-pen-to-square" style="color:#2563eb;font-size:20px;"></i>
-            </button>
-            <button class="delete-btn" onclick="deleteExam(${exam.id}, this)" title="Delete Exam" style="position:absolute;bottom:12px;right:12px;background:none;border:none;cursor:pointer;">
-              <i class="fa-solid fa-trash" style="color:#e11d48;font-size:20px;"></i>
-            </button>
-          `;
-          
-          container.appendChild(examCard);
-        });
+        allExams = exams;
+        populateFilters(exams);
+        displayExams(exams);
       } catch (e) {
         console.error('Error parsing exams:', e);
         document.getElementById('examContainer').innerHTML = '<div class="no-exams">Error loading exams</div>';
@@ -335,6 +413,78 @@ function loadExams() {
       document.getElementById('examContainer').innerHTML = '<div class="no-exams">Error loading exams</div>';
     });
 }
+
+function populateFilters(exams) {
+  const classFilter = document.getElementById('classFilter');
+  const dateFilter = document.getElementById('dateFilter');
+  
+  const classes = [...new Set(exams.map(e => e.class_name))].sort();
+  const dates = [...new Set(exams.map(e => e.exam_date))].sort();
+  
+  classFilter.innerHTML = '<option value="">All Classes</option>';
+  classes.forEach(cls => {
+    classFilter.innerHTML += `<option value="${cls}">${cls}</option>`;
+  });
+  
+  dateFilter.innerHTML = '<option value="">All Dates</option>';
+  dates.forEach(date => {
+    dateFilter.innerHTML += `<option value="${date}">${date}</option>`;
+  });
+}
+
+function displayExams(exams) {
+  const container = document.getElementById('examContainer');
+  
+  if (exams.length === 0) {
+    container.innerHTML = '<div class="no-exams">No exams found.</div>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  exams.forEach(exam => {
+    const examCard = document.createElement('div');
+    examCard.className = 'exam-card';
+    examCard.style.position = 'relative';
+    
+    examCard.innerHTML = `
+      <div class="exam-title">${exam.exam_name}</div>
+      <div class="exam-class">Class: ${exam.class_name}</div>
+      <div class="exam-info"><strong>Date:</strong> ${exam.exam_date}</div>
+      <div class="exam-info"><strong>Time:</strong> ${exam.start_time} - ${exam.end_time}</div>
+      <div class="exam-info"><strong>Total Marks:</strong> ${exam.total_marks}</div>
+      <div class="exam-info"><strong>Passing Marks:</strong> ${exam.passing_marks}</div>
+      ${exam.notes ? `<div class="exam-notes"><strong>Notes:</strong> ${exam.notes}</div>` : ''}
+      <button class="edit-btn" onclick="openEditModal(${exam.id}, '${exam.exam_name}', '${exam.class_name}', '${exam.class_code}', '${exam.exam_date}', '${exam.start_time}', '${exam.end_time}', ${exam.total_marks}, ${exam.passing_marks})" title="Edit Exam" style="position:absolute;bottom:12px;right:52px;background:none;border:none;cursor:pointer;">
+        <i class="fa-regular fa-pen-to-square" style="color:#2563eb;font-size:20px;"></i>
+      </button>
+      <button class="delete-btn" onclick="deleteExam(${exam.id}, this)" title="Delete Exam" style="position:absolute;bottom:12px;right:12px;background:none;border:none;cursor:pointer;">
+        <i class="fa-solid fa-trash" style="color:#e11d48;font-size:20px;"></i>
+      </button>
+    `;
+    
+    container.appendChild(examCard);
+  });
+}
+
+function filterExams() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  const classFilter = document.getElementById('classFilter').value;
+  const dateFilter = document.getElementById('dateFilter').value;
+  
+  let filtered = allExams.filter(exam => {
+    const matchesSearch = exam.exam_name.toLowerCase().includes(searchTerm);
+    const matchesClass = !classFilter || exam.class_name === classFilter;
+    const matchesDate = !dateFilter || exam.exam_date === dateFilter;
+    
+    return matchesSearch && matchesClass && matchesDate;
+  });
+  
+  displayExams(filtered);
+}
+
+document.getElementById('searchInput').addEventListener('input', filterExams);
+document.getElementById('classFilter').addEventListener('change', filterExams);
+document.getElementById('dateFilter').addEventListener('change', filterExams);
 
 function deleteExam(examId, btn) {
   if (!confirm('Are you sure you want to delete this exam?')) return;
