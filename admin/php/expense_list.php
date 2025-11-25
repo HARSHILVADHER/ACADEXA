@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-$stmt = $conn->prepare("SELECT date, source, description, category, payment_method, amount FROM expense WHERE user_id = ? ORDER BY date DESC");
+$stmt = $conn->prepare("SELECT date, description, category, payment_method, amount FROM expense WHERE user_id = ? ORDER BY date DESC");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $expense_records = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -19,6 +19,17 @@ $stmt = $conn->prepare("SELECT SUM(amount) as total FROM expense WHERE user_id =
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $total_expense = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
+$stmt->close();
+
+// Get expense categories
+$stmt = $conn->prepare("SELECT category_name FROM income_expense_category WHERE user_id = ? AND category_type = 'expense' ORDER BY category_name");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$expense_categories = [];
+while ($row = $result->fetch_assoc()) {
+    $expense_categories[] = $row['category_name'];
+}
 $stmt->close();
 
 $conn->close();
@@ -188,7 +199,6 @@ $conn->close();
             <a href="income.php">Finance</a>
             <a href="income_list.php">Income</a>
             <a href="expense_list.php" class="active">Expense</a>
-            <a href="empty_sheet.php">Sheets</a>
         </nav>
     </header>
 
@@ -218,7 +228,6 @@ $conn->close();
         const phpData = <?php echo json_encode(array_map(function($record) {
             return [
                 $record['date'],
-                $record['source'],
                 $record['description'] ?: '',
                 $record['category'],
                 $record['payment_method'],
@@ -226,16 +235,17 @@ $conn->close();
             ];
         }, $expense_records)); ?>;
 
+        const expenseCategories = <?php echo json_encode($expense_categories); ?>;
+
         const container = document.getElementById('spreadsheet');
         let hot = new Handsontable(container, {
             data: phpData,
-            colHeaders: ['Date', 'Source', 'Description', 'Category', 'Payment Method', 'Amount (₹)'],
+            colHeaders: ['Date', 'Description', 'Category', 'Mode', 'Amount (₹)'],
             columns: [
                 { type: 'date', dateFormat: 'YYYY-MM-DD' },
                 { type: 'text' },
-                { type: 'text' },
-                { type: 'text' },
-                { type: 'text' },
+                { type: 'dropdown', source: expenseCategories },
+                { type: 'dropdown', source: ['Cash', 'Bank Transfer', 'UPI', 'Card', 'Cheque'] },
                 { type: 'numeric', numericFormat: { pattern: '0,0.00' } }
             ],
             rowHeaders: true,
@@ -258,32 +268,18 @@ $conn->close();
 
         function saveAllData() {
             const data = hot.getData();
-            const existingCount = phpData.length;
             const newRecords = [];
-            const newRowIndices = [];
             
             for (let i = 0; i < data.length; i++) {
                 const row = data[i];
-                if (row[0] && row[1] && row[3] && row[4] && row[5]) {
-                    const isDuplicate = phpData.some(existing => 
-                        existing[0] === row[0] && 
-                        existing[1] === row[1] && 
-                        existing[3] === row[3] && 
-                        existing[4] === row[4] && 
-                        parseFloat(existing[5]) === parseFloat(row[5])
-                    );
-                    
-                    if (!isDuplicate) {
-                        newRecords.push({
-                            date: row[0],
-                            source: row[1],
-                            description: row[2] || '',
-                            category: row[3],
-                            payment_method: row[4],
-                            amount: parseFloat(row[5]) || 0
-                        });
-                        newRowIndices.push(i);
-                    }
+                if (row[0] && row[2] && row[3] && row[4]) {
+                    newRecords.push({
+                        date: row[0],
+                        description: row[1] || '',
+                        category: row[2],
+                        payment_method: row[3],
+                        amount: parseFloat(row[4]) || 0
+                    });
                 }
             }
             
@@ -301,9 +297,25 @@ $conn->close();
             .then(data => {
                 if (data.success) {
                     alert('Saved ' + data.saved + ' new records!');
-                    newRowIndices.forEach(idx => {
-                        hot.setDataAtRow(idx, [null, null, null, null, null, null]);
-                    });
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to save'));
+                }
+            })
+            .catch(err => alert('Save failed: ' + err.message));
+        }
+    </script>
+</body>
+</html>pense.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ records: newRecords })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Saved ' + data.saved + ' new records!');
+                    location.reload();
                 } else {
                     alert('Error: ' + (data.message || 'Failed to save'));
                 }

@@ -119,6 +119,59 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 
+// Get income by category for pie chart
+$incomeCategoryData = [];
+$stmt = $conn->prepare("SELECT category, SUM(amount) as total FROM income WHERE user_id = ? GROUP BY category ORDER BY total DESC");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    $incomeCategoryData[] = $row;
+}
+$stmt->close();
+
+// Calculate balance data
+$balanceData = [
+    ['type' => 'Income', 'amount' => $totalIncome],
+    ['type' => 'Expense', 'amount' => $totalExpense]
+];
+
+// Create category table if not exists
+$conn->query("CREATE TABLE IF NOT EXISTS income_expense_category (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    category_name VARCHAR(100) NOT NULL,
+    category_type ENUM('income', 'expense') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_category_type (category_type),
+    UNIQUE KEY unique_user_category (user_id, category_name, category_type)
+)");
+
+// Get category-wise income and expense
+$categoryWiseData = [];
+$stmt = $conn->prepare("
+    SELECT 
+        c.category_name,
+        c.category_type,
+        COALESCE(SUM(CASE WHEN c.category_type = 'income' THEN i.amount END), 0) as income_amount,
+        COALESCE(SUM(CASE WHEN c.category_type = 'expense' THEN e.amount END), 0) as expense_amount
+    FROM income_expense_category c
+    LEFT JOIN income i ON c.category_name = i.category AND c.user_id = i.user_id AND c.category_type = 'income'
+    LEFT JOIN expense e ON c.category_name = e.category AND c.user_id = e.user_id AND c.category_type = 'expense'
+    WHERE c.user_id = ?
+    GROUP BY c.category_name, c.category_type
+    ORDER BY c.category_type, c.category_name
+");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    $categoryWiseData[] = $row;
+}
+$stmt->close();
+
 $conn->close();
 ?>
 
@@ -509,6 +562,12 @@ $conn->close();
                 align-items: flex-start;
             }
         }
+
+        @media (max-width: 992px) {
+            div[style*="grid-template-columns: repeat(3, 1fr)"] {
+                grid-template-columns: 1fr !important;
+            }
+        }
     </style>
 </head>
 
@@ -518,18 +577,17 @@ $conn->close();
         <nav>
             <a href="dashboard.php">Home</a>
             <a href="income.php" class="active">Finance</a>
-            <a href="#" onclick="showIncomeSheet(); return false;">Income</a>
-            <a href="#" onclick="showExpenseSheet(); return false;">Expense</a>
-            <a href="#" onclick="showEmptySheet(); return false;">Sheets</a>
+            <a href="income_list.php">Income</a>
+            <a href="expense_list.php">Expense</a>
         </nav>
     </header>
 
     <div class="container">
         <div class="page-header">
             <h1 class="page-title">Income Management</h1>
-            <button class="add-income-btn" onclick="showAddIncomeModal()">
+            <button class="add-income-btn" onclick="showAddCategoryModal()">
                 <i class="fas fa-plus"></i>
-                Add Income
+                Add Category
             </button>
         </div>
 
@@ -611,67 +669,107 @@ $conn->close();
             <?php endif; ?>
         </div>
 
-        <!-- Expense by Category Pie Chart -->
-        <div class="income-card">
-            <h3 class="card-title">Expense by Category</h3>
-            <?php if (empty($expenseCategoryData)): ?>
+        <!-- Three Pie Charts in One Line -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 30px;">
+            <!-- Expense Pie Chart -->
+            <div class="income-card">
+                <h3 class="card-title" style="font-size: 1.1rem;">Expense</h3>
+                <?php if (empty($expenseCategoryData)): ?>
+                    <div class="empty-state" style="padding: 20px;">
+                        <i class="fas fa-chart-pie" style="font-size: 2rem;"></i>
+                        <p style="font-size: 0.85rem;">No data</p>
+                    </div>
+                <?php else: ?>
+                    <div class="chart-container" style="padding: 10px 0;">
+                        <canvas id="expenseChart" style="max-height: 200px;"></canvas>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Income Pie Chart -->
+            <div class="income-card">
+                <h3 class="card-title" style="font-size: 1.1rem;">Income</h3>
+                <?php if (empty($incomeCategoryData)): ?>
+                    <div class="empty-state" style="padding: 20px;">
+                        <i class="fas fa-chart-pie" style="font-size: 2rem;"></i>
+                        <p style="font-size: 0.85rem;">No data</p>
+                    </div>
+                <?php else: ?>
+                    <div class="chart-container" style="padding: 10px 0;">
+                        <canvas id="incomeChart" style="max-height: 200px;"></canvas>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Balance Pie Chart -->
+            <div class="income-card">
+                <h3 class="card-title" style="font-size: 1.1rem;">Balance</h3>
+                <div class="chart-container" style="padding: 10px 0;">
+                    <canvas id="balanceChart" style="max-height: 200px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category-wise Income and Expense Table -->
+        <div class="income-card" style="margin-bottom: 30px;">
+            <h3 class="card-title">Category-wise Income & Expense</h3>
+            <?php if (empty($categoryWiseData)): ?>
                 <div class="empty-state">
-                    <i class="fas fa-chart-pie"></i>
-                    <p>No expense data found</p>
+                    <i class="fas fa-table"></i>
+                    <p>No categories found</p>
+                    <p style="font-size: 0.9rem; margin-top: 10px;">Add categories to track income and expenses</p>
                 </div>
             <?php else: ?>
-                <div class="chart-container">
-                    <canvas id="expenseChart"></canvas>
+                <div style="overflow-x: auto;">
+                    <table class="income-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th style="text-align: right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($categoryWiseData as $cat): ?>
+                                <tr>
+                                    <td style="font-weight: 600;"><?php echo htmlspecialchars($cat['category_name']); ?></td>
+                                    <td>
+                                        <span class="category-tag" style="background: <?php echo $cat['category_type'] == 'income' ? '#d1f4e0' : '#ffd4d4'; ?>; color: <?php echo $cat['category_type'] == 'income' ? '#00a651' : '#d90429'; ?>;">
+                                            <?php echo ucfirst($cat['category_type']); ?>
+                                        </span>
+                                    </td>
+                                    <td style="text-align: right; font-weight: 700; color: <?php echo $cat['category_type'] == 'income' ? 'var(--success)' : 'var(--danger)'; ?>;">
+                                        ₹<?php echo number_format($cat['category_type'] == 'income' ? $cat['income_amount'] : $cat['expense_amount'], 2); ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
             <?php endif; ?>
         </div>
     </div>
 
-    <!-- Add Income Modal -->
-    <div id="addIncomeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-        <div style="background: white; padding: 30px; border-radius: 15px; width: 500px; max-width: 90%; max-height: 90%; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-            <h3 style="margin-bottom: 20px; color: var(--primary);">Add New Income</h3>
-            <form id="addIncomeForm">
+    <!-- Add Category Modal -->
+    <div id="addCategoryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 30px; border-radius: 15px; width: 450px; max-width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <h3 style="margin-bottom: 20px; color: var(--primary);">Add New Category</h3>
+            <form id="addCategoryForm">
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Source *</label>
-                    <input type="text" id="incomeSource" required style="width: 100%; padding: 10px; border: 2px solid var(--light-gray); border-radius: 8px; font-size: 14px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Amount *</label>
-                    <input type="number" id="incomeAmount" step="0.01" required style="width: 100%; padding: 10px; border: 2px solid var(--light-gray); border-radius: 8px; font-size: 14px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Category</label>
-                    <select id="incomeCategory" style="width: 100%; padding: 10px; border: 2px solid var(--light-gray); border-radius: 8px; font-size: 14px;">
-                        <option value="Fees">Fees</option>
-                        <option value="Admission">Admission</option>
-                        <option value="Books">Books</option>
-                        <option value="Uniform">Uniform</option>
-                        <option value="Transport">Transport</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Payment Method</label>
-                    <select id="incomePaymentMethod" style="width: 100%; padding: 10px; border: 2px solid var(--light-gray); border-radius: 8px; font-size: 14px;">
-                        <option value="Cash">Cash</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                        <option value="UPI">UPI</option>
-                        <option value="Card">Card</option>
-                        <option value="Cheque">Cheque</option>
-                    </select>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date *</label>
-                    <input type="date" id="incomeDate" required style="width: 100%; padding: 10px; border: 2px solid var(--light-gray); border-radius: 8px; font-size: 14px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Category Name *</label>
+                    <input type="text" id="categoryName" required style="width: 100%; padding: 10px; border: 2px solid var(--light-gray); border-radius: 8px; font-size: 14px;" placeholder="e.g., Salary, Rent, Food">
                 </div>
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Description</label>
-                    <textarea id="incomeDescription" rows="3" style="width: 100%; padding: 10px; border: 2px solid var(--light-gray); border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Category Type *</label>
+                    <select id="categoryType" required style="width: 100%; padding: 10px; border: 2px solid var(--light-gray); border-radius: 8px; font-size: 14px;">
+                        <option value="">Select Type</option>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
                 </div>
                 <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" onclick="closeAddIncomeModal()" style="padding: 10px 20px; background: var(--light-gray); color: var(--gray); border: none; border-radius: 8px; cursor: pointer;">Cancel</button>
-                    <button type="submit" style="padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer;">Add Income</button>
+                    <button type="button" onclick="closeAddCategoryModal()" style="padding: 10px 20px; background: var(--light-gray); color: var(--gray); border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+                    <button type="submit" style="padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Add Category</button>
                 </div>
             </form>
         </div>
@@ -679,108 +777,119 @@ $conn->close();
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Set today's date as default
-        document.getElementById('incomeDate').value = new Date().toISOString().split('T')[0];
+        const chartColors = [
+            '#4361ee', '#f72585', '#4cc9f0', '#f8961e', '#ef233c',
+            '#3a0ca3', '#06ffa5', '#c77dff', '#ff6b35', '#00d9ff'
+        ];
+
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 8,
+                        font: { size: 10, family: 'Inter' },
+                        boxWidth: 10
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return label + ': ₹' + value.toLocaleString('en-IN', {minimumFractionDigits: 2}) + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        };
         
         // Expense Pie Chart
         <?php if (!empty($expenseCategoryData)): ?>
         const expenseData = <?php echo json_encode($expenseCategoryData); ?>;
-        const ctx = document.getElementById('expenseChart').getContext('2d');
-        new Chart(ctx, {
+        new Chart(document.getElementById('expenseChart'), {
             type: 'pie',
             data: {
                 labels: expenseData.map(item => item.category),
                 datasets: [{
                     data: expenseData.map(item => item.total),
-                    backgroundColor: [
-                        '#4361ee',
-                        '#f72585',
-                        '#4cc9f0',
-                        '#f8961e',
-                        '#ef233c',
-                        '#3a0ca3',
-                        '#06ffa5',
-                        '#c77dff',
-                        '#ff6b35',
-                        '#00d9ff'
-                    ],
+                    backgroundColor: chartColors,
                     borderWidth: 2,
                     borderColor: '#fff'
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            padding: 10,
-                            font: {
-                                size: 11,
-                                family: 'Inter'
-                            },
-                            boxWidth: 12
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed || 0;
-                                return label + ': ₹' + value.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                            }
-                        }
-                    }
-                }
-            }
+            options: chartOptions
         });
         <?php endif; ?>
 
-        function showIncomeSheet() {
-            window.location.href = 'income_list.php';
+        // Income Pie Chart
+        <?php if (!empty($incomeCategoryData)): ?>
+        const incomeData = <?php echo json_encode($incomeCategoryData); ?>;
+        new Chart(document.getElementById('incomeChart'), {
+            type: 'pie',
+            data: {
+                labels: incomeData.map(item => item.category),
+                datasets: [{
+                    data: incomeData.map(item => item.total),
+                    backgroundColor: chartColors,
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: chartOptions
+        });
+        <?php endif; ?>
+
+        // Balance Pie Chart
+        const balanceData = <?php echo json_encode($balanceData); ?>;
+        new Chart(document.getElementById('balanceChart'), {
+            type: 'pie',
+            data: {
+                labels: balanceData.map(item => item.type),
+                datasets: [{
+                    data: balanceData.map(item => item.amount),
+                    backgroundColor: ['#4cc9f0', '#ef233c'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: chartOptions
+        });
+
+
+
+        function showAddCategoryModal() {
+            document.getElementById('addCategoryModal').style.display = 'flex';
         }
 
-        function showExpenseSheet() {
-            window.location.href = 'expense_list.php';
+        function closeAddCategoryModal() {
+            document.getElementById('addCategoryModal').style.display = 'none';
+            document.getElementById('addCategoryForm').reset();
         }
 
-        function showEmptySheet() {
-            window.location.href = 'empty_sheet.php';
-        }
-
-        function showAddIncomeModal() {
-            document.getElementById('addIncomeModal').style.display = 'flex';
-        }
-
-        function closeAddIncomeModal() {
-            document.getElementById('addIncomeModal').style.display = 'none';
-            document.getElementById('addIncomeForm').reset();
-            document.getElementById('incomeDate').value = new Date().toISOString().split('T')[0];
-        }
-
-        document.getElementById('addIncomeForm').addEventListener('submit', function(e) {
+        document.getElementById('addCategoryForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const formData = new FormData();
-            formData.append('source', document.getElementById('incomeSource').value);
-            formData.append('amount', document.getElementById('incomeAmount').value);
-            formData.append('category', document.getElementById('incomeCategory').value);
-            formData.append('payment_method', document.getElementById('incomePaymentMethod').value);
-            formData.append('date', document.getElementById('incomeDate').value);
-            formData.append('description', document.getElementById('incomeDescription').value);
+            formData.append('category_name', document.getElementById('categoryName').value);
+            formData.append('category_type', document.getElementById('categoryType').value);
 
-            fetch('add_income.php', {
+            fetch('add_category.php', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    closeAddIncomeModal();
-                    location.reload(); // Refresh to show new data
+                    alert('Category added successfully!');
+                    closeAddCategoryModal();
+                    location.reload();
                 } else {
-                    alert('Error: ' + (data.message || 'Failed to add income'));
+                    alert('Error: ' + (data.message || 'Failed to add category'));
                 }
             })
             .catch(error => {
@@ -790,9 +899,9 @@ $conn->close();
         });
         
         // Close modal on outside click
-        document.getElementById('addIncomeModal').addEventListener('click', function(e) {
+        document.getElementById('addCategoryModal').addEventListener('click', function(e) {
             if (e.target === this) {
-                closeAddIncomeModal();
+                closeAddCategoryModal();
             }
         });
     </script>

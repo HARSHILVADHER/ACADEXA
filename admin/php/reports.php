@@ -242,7 +242,7 @@ $conn->close();
                 <div class="report-icon">
                     <i class="fas fa-calendar-check"></i>
                 </div>
-                <h3 class="report-title">Attendance Report</h3>
+                <h3 class="report-title">Faculty's Attendance</h3>
                 <p class="report-desc">Detailed attendance records with statistics and trends for all classes</p>
                 <a href="attendance_reports.php" class="download-btn">
                     <i class="fas fa-download"></i>

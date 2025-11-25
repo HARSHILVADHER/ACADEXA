@@ -19,6 +19,8 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -215,6 +217,45 @@ $stmt->close();
           }
         }
     </style>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const classSelect = document.getElementById('class_code');
+        const subjectSelect = document.getElementById('subject');
+        
+        classSelect.addEventListener('change', function() {
+          const classCode = this.value;
+          const className = this.options[this.selectedIndex].dataset.className;
+          
+          if (!classCode || !className) {
+            subjectSelect.innerHTML = '<option value="">Select Class First</option>';
+            subjectSelect.disabled = true;
+            return;
+          }
+          
+          fetch('get_subjects_by_class.php?class_name=' + encodeURIComponent(className))
+            .then(response => response.json())
+            .then(subjects => {
+              subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+              if (subjects.length === 0) {
+                subjectSelect.innerHTML = '<option value="">No subjects found</option>';
+              } else {
+                subjects.forEach(subject => {
+                  const option = document.createElement('option');
+                  option.value = subject.subject_code;
+                  option.textContent = subject.subject_name;
+                  subjectSelect.appendChild(option);
+                });
+              }
+              subjectSelect.disabled = false;
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              subjectSelect.innerHTML = '<option value="">Error loading subjects</option>';
+              subjectSelect.disabled = false;
+            });
+        });
+      });
+    </script>
 </head>
 <body>
   <header>
@@ -238,13 +279,19 @@ $stmt->close();
             <select id="class_code" name="class_code" required>
               <option value="">Select Class</option>
               <?php foreach ($classes as $class): ?>
-                <option value="<?php echo $class['code']; ?>"><?php echo htmlspecialchars($class['name']); ?></option>
+                <option value="<?php echo $class['code']; ?>" data-class-name="<?php echo htmlspecialchars($class['name']); ?>"><?php echo htmlspecialchars($class['name']); ?></option>
               <?php endforeach; ?>
             </select>
           </div>
           <div class="form-group">
             <label for="exam_name">Exam Name</label>
             <input type="text" id="exam_name" name="exam_name" required>
+          </div>
+          <div class="form-group">
+            <label for="subject">Select Subject</label>
+            <select id="subject" name="subject" required disabled>
+              <option value="">Select Class First</option>
+            </select>
           </div>
           <div class="row">
             <div class="form-group col-half">

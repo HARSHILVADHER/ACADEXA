@@ -20,7 +20,7 @@ if (!$input || !isset($input['records']) || !is_array($input['records'])) {
 $saved = 0;
 
 foreach ($input['records'] as $data) {
-    if (!isset($data['date'], $data['source'], $data['category'], $data['payment_method'], $data['amount'])) {
+    if (!isset($data['date'], $data['category'], $data['payment_method'], $data['amount'])) {
         continue;
     }
     
@@ -34,8 +34,11 @@ foreach ($input['records'] as $data) {
         }
     }
     
-    $checkStmt = $conn->prepare("SELECT id FROM income WHERE user_id = ? AND date = ? AND source = ? AND category = ? AND payment_method = ? AND amount = ?");
-    $checkStmt->bind_param("issssd", $user_id, $date, $data['source'], $data['category'], $data['payment_method'], $data['amount']);
+    $description = $data['description'] ?? '';
+    $source = $data['category'];
+    
+    $checkStmt = $conn->prepare("SELECT id FROM income WHERE user_id = ? AND date = ? AND category = ? AND payment_method = ? AND amount = ?");
+    $checkStmt->bind_param("isssd", $user_id, $date, $data['category'], $data['payment_method'], $data['amount']);
     $checkStmt->execute();
     $checkStmt->store_result();
     
@@ -46,7 +49,7 @@ foreach ($input['records'] as $data) {
     $checkStmt->close();
     
     $stmt = $conn->prepare("INSERT INTO income (user_id, date, source, description, category, payment_method, amount) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("isssssd", $user_id, $date, $data['source'], $data['description'], $data['category'], $data['payment_method'], $data['amount']);
+    $stmt->bind_param("isssssd", $user_id, $date, $source, $description, $data['category'], $data['payment_method'], $data['amount']);
     
     if ($stmt->execute()) {
         $saved++;
